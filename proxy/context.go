@@ -1,8 +1,7 @@
 package proxy
 
 import (
-	"net"
-
+	"github.com/rueian/pgbroker/backend"
 	"github.com/rueian/pgbroker/message"
 )
 
@@ -17,10 +16,7 @@ const (
 )
 
 type Context struct {
-	FrontendAddress   net.Addr
-	BackendAddress    net.Addr
-	StartupParameters map[string]string
-	BackendKeyData    *message.BackendKeyData
-	RowDescription    *message.RowDescription
-	AuthPhase         AuthPhase
+	ConnInfo       backend.ConnInfo
+	RowDescription *message.RowDescription
+	AuthPhase      AuthPhase
 }

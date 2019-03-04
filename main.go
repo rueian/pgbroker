@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/rueian/pgbroker/backend"
 	"github.com/rueian/pgbroker/message"
@@ -16,18 +19,18 @@ func main() {
 	}
 	defer ln.Close()
 
-	clientHandlers := proxy.ClientMessageHandlers{}
-	serverHandlers := proxy.ServerMessageHandlers{}
+	clientMessageHandlers := proxy.ClientMessageHandlers{}
+	serverMessageHandlers := proxy.ServerMessageHandlers{}
 
-	clientHandlers.SetHandleQuery(func(ctx *proxy.Context, msg *message.Query) (query *message.Query, e error) {
+	clientMessageHandlers.SetHandleQuery(func(ctx *proxy.Context, msg *message.Query) (query *message.Query, e error) {
 		fmt.Println("Query: ", msg.QueryString)
 		return msg, nil
 	})
-	serverHandlers.SetHandleRowDescription(func(ctx *proxy.Context, msg *message.RowDescription) (data *message.RowDescription, e error) {
+	serverMessageHandlers.SetHandleRowDescription(func(ctx *proxy.Context, msg *message.RowDescription) (data *message.RowDescription, e error) {
 		ctx.RowDescription = msg
 		return msg, nil
 	})
-	serverHandlers.SetHandleDataRow(func(ctx *proxy.Context, msg *message.DataRow) (data *message.DataRow, e error) {
+	serverMessageHandlers.SetHandleDataRow(func(ctx *proxy.Context, msg *message.DataRow) (data *message.DataRow, e error) {
 		fmt.Printf("DataDes\t")
 		for _, f := range ctx.RowDescription.Fields {
 			fmt.Printf("%s\t", f.Name)
@@ -41,12 +44,17 @@ func main() {
 		return msg, nil
 	})
 
-	for {
-		conn, err := ln.Accept()
-		if err != nil {
-			panic(err)
-		}
-
-		go proxy.HandleConn(conn, backend.StaticResolver{Address: ":5432"}, clientHandlers, serverHandlers)
+	server := proxy.Server{
+		PGResolver:            backend.NewStaticPGResolver(":5432"),
+		ConnInfoStore:         backend.NewInMemoryConnInfoStore(),
+		ServerMessageHandlers: serverMessageHandlers,
+		ClientMessageHandlers: clientMessageHandlers,
 	}
+
+	go server.Serve(ln)
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	<-sigs
+	server.Shutdown()
 }

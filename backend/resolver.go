@@ -4,14 +4,18 @@ import (
 	"net"
 )
 
-type Resolver interface {
-	GetBackend(clientAddr net.Addr, parameters map[string]string) (net.Conn, error)
+type PGResolver interface {
+	GetPGConn(clientAddr net.Addr, parameters map[string]string) (net.Conn, error)
 }
 
-type StaticResolver struct {
+type StaticPGResolver struct {
 	Address string
 }
 
-func (r StaticResolver) GetBackend(clientAddr net.Addr, parameters map[string]string) (net.Conn, error) {
+func (r *StaticPGResolver) GetPGConn(clientAddr net.Addr, parameters map[string]string) (net.Conn, error) {
 	return net.Dial("tcp", r.Address)
+}
+
+func NewStaticPGResolver(addr string) *StaticPGResolver {
+	return &StaticPGResolver{Address: addr}
 }
