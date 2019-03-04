@@ -16,18 +16,18 @@ func main() {
 	}
 	defer ln.Close()
 
-	frontendHandlers := proxy.FrontendMessageHandlers{}
-	backendHandlers := proxy.BackendMessageHandlers{}
+	clientHandlers := proxy.ClientMessageHandlers{}
+	serverHandlers := proxy.ServerMessageHandlers{}
 
-	frontendHandlers.SetHandleQuery(func(ctx *proxy.Context, msg *message.Query) (query *message.Query, e error) {
+	clientHandlers.SetHandleQuery(func(ctx *proxy.Context, msg *message.Query) (query *message.Query, e error) {
 		fmt.Println("Query: ", msg.QueryString)
 		return msg, nil
 	})
-	backendHandlers.SetHandleRowDescription(func(ctx *proxy.Context, msg *message.RowDescription) (data *message.RowDescription, e error) {
+	serverHandlers.SetHandleRowDescription(func(ctx *proxy.Context, msg *message.RowDescription) (data *message.RowDescription, e error) {
 		ctx.RowDescription = msg
 		return msg, nil
 	})
-	backendHandlers.SetHandleDataRow(func(ctx *proxy.Context, msg *message.DataRow) (data *message.DataRow, e error) {
+	serverHandlers.SetHandleDataRow(func(ctx *proxy.Context, msg *message.DataRow) (data *message.DataRow, e error) {
 		fmt.Printf("DataDes\t")
 		for _, f := range ctx.RowDescription.Fields {
 			fmt.Printf("%s\t", f.Name)
@@ -47,6 +47,6 @@ func main() {
 			panic(err)
 		}
 
-		go proxy.HandleConn(conn, backend.StaticResolver{Address: ":5432"}, frontendHandlers, backendHandlers)
+		go proxy.HandleConn(conn, backend.StaticResolver{Address: ":5432"}, clientHandlers, serverHandlers)
 	}
 }

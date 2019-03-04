@@ -9,10 +9,10 @@ import (
 	"github.com/rueian/pgbroker/message"
 )
 
-func HandleConn(client net.Conn, backendResolver backend.Resolver, frontendHandlers FrontendMessageHandlers, backendHandlers BackendMessageHandlers) (err error) {
+func HandleConn(client net.Conn, backendResolver backend.Resolver, clientHandlers ClientMessageHandlers, serverHandlers ServerMessageHandlers) (err error) {
 	defer client.Close()
 
-	backendHandlers.SetHandleBackendKeyData(func(ctx *Context, msg *message.BackendKeyData) (data *message.BackendKeyData, e error) {
+	serverHandlers.SetHandleBackendKeyData(func(ctx *Context, msg *message.BackendKeyData) (data *message.BackendKeyData, e error) {
 		ctx.BackendKeyData = msg
 		return msg, nil
 	})
@@ -58,12 +58,12 @@ func HandleConn(client net.Conn, backendResolver backend.Resolver, frontendHandl
 
 	go func() {
 		defer close(readCh)
-		readCh <- ProcessMessages(ctx, client, server, frontendHandlers)
+		readCh <- ProcessMessages(ctx, client, server, clientHandlers)
 	}()
 
 	go func() {
 		defer close(writeCh)
-		writeCh <- ProcessMessages(ctx, server, client, backendHandlers)
+		writeCh <- ProcessMessages(ctx, server, client, serverHandlers)
 	}()
 
 	var wait chan error

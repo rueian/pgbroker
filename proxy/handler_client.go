@@ -20,16 +20,16 @@ type HandleTerminate func(ctx *Context, msg *message.Terminate) (*message.Termin
 type HandleCopyData func(ctx *Context, msg *message.CopyData) (*message.CopyData, error)
 type HandleCopyDone func(ctx *Context, msg *message.CopyDone) (*message.CopyDone, error)
 
-type HandlePMessage struct {
+type HandleAuthenticationResponse struct {
 	HandlePasswordMessage     HandlePasswordMessage
 	HandleGSSResponse         HandleGSSResponse
 	HandleSASLInitialResponse HandleSASLInitialResponse
 	HandleSASLResponse        HandleSASLResponse
 }
 
-type FrontendMessageHandlers map[byte]MessageHandler
+type ClientMessageHandlers map[byte]MessageHandler
 
-func (s *FrontendMessageHandlers) SetHandleBind(h HandleBind) {
+func (s *ClientMessageHandlers) SetHandleBind(h HandleBind) {
 	if h == nil {
 		return
 	}
@@ -37,7 +37,7 @@ func (s *FrontendMessageHandlers) SetHandleBind(h HandleBind) {
 		return h(ctx, message.ReadBind(raw))
 	}
 }
-func (s *FrontendMessageHandlers) SetHandleClose(h HandleClose) {
+func (s *ClientMessageHandlers) SetHandleClose(h HandleClose) {
 	if h == nil {
 		return
 	}
@@ -45,7 +45,7 @@ func (s *FrontendMessageHandlers) SetHandleClose(h HandleClose) {
 		return h(ctx, message.ReadClose(raw))
 	}
 }
-func (s *FrontendMessageHandlers) SetHandleCopyFail(h HandleCopyFail) {
+func (s *ClientMessageHandlers) SetHandleCopyFail(h HandleCopyFail) {
 	if h == nil {
 		return
 	}
@@ -53,7 +53,7 @@ func (s *FrontendMessageHandlers) SetHandleCopyFail(h HandleCopyFail) {
 		return h(ctx, message.ReadCopyFail(raw))
 	}
 }
-func (s *FrontendMessageHandlers) SetHandleDescribe(h HandleDescribe) {
+func (s *ClientMessageHandlers) SetHandleDescribe(h HandleDescribe) {
 	if h == nil {
 		return
 	}
@@ -61,7 +61,7 @@ func (s *FrontendMessageHandlers) SetHandleDescribe(h HandleDescribe) {
 		return h(ctx, message.ReadDescribe(raw))
 	}
 }
-func (s *FrontendMessageHandlers) SetHandleExecute(h HandleExecute) {
+func (s *ClientMessageHandlers) SetHandleExecute(h HandleExecute) {
 	if h == nil {
 		return
 	}
@@ -69,7 +69,7 @@ func (s *FrontendMessageHandlers) SetHandleExecute(h HandleExecute) {
 		return h(ctx, message.ReadExecute(raw))
 	}
 }
-func (s *FrontendMessageHandlers) SetHandleFlush(h HandleFlush) {
+func (s *ClientMessageHandlers) SetHandleFlush(h HandleFlush) {
 	if h == nil {
 		return
 	}
@@ -77,7 +77,7 @@ func (s *FrontendMessageHandlers) SetHandleFlush(h HandleFlush) {
 		return h(ctx, message.ReadFlush(raw))
 	}
 }
-func (s *FrontendMessageHandlers) SetHandleFunctionCall(h HandleFunctionCall) {
+func (s *ClientMessageHandlers) SetHandleFunctionCall(h HandleFunctionCall) {
 	if h == nil {
 		return
 	}
@@ -85,7 +85,7 @@ func (s *FrontendMessageHandlers) SetHandleFunctionCall(h HandleFunctionCall) {
 		return h(ctx, message.ReadFunctionCall(raw))
 	}
 }
-func (s *FrontendMessageHandlers) SetHandleParse(h HandleParse) {
+func (s *ClientMessageHandlers) SetHandleParse(h HandleParse) {
 	if h == nil {
 		return
 	}
@@ -93,7 +93,7 @@ func (s *FrontendMessageHandlers) SetHandleParse(h HandleParse) {
 		return h(ctx, message.ReadParse(raw))
 	}
 }
-func (s *FrontendMessageHandlers) SetHandlePMessage(h HandlePMessage) {
+func (s *ClientMessageHandlers) SetHandlePMessage(h HandleAuthenticationResponse) {
 	(*s)['p'] = func(ctx *Context, raw []byte) (message.Reader, error) {
 		switch ctx.AuthPhase {
 		case PhaseSASLInit:
@@ -116,7 +116,7 @@ func (s *FrontendMessageHandlers) SetHandlePMessage(h HandlePMessage) {
 		}
 	}
 }
-func (s *FrontendMessageHandlers) SetHandleQuery(h HandleQuery) {
+func (s *ClientMessageHandlers) SetHandleQuery(h HandleQuery) {
 	if h == nil {
 		return
 	}
@@ -124,7 +124,7 @@ func (s *FrontendMessageHandlers) SetHandleQuery(h HandleQuery) {
 		return h(ctx, message.ReadQuery(raw))
 	}
 }
-func (s *FrontendMessageHandlers) SetHandleSync(h HandleSync) {
+func (s *ClientMessageHandlers) SetHandleSync(h HandleSync) {
 	if h == nil {
 		return
 	}
@@ -132,7 +132,7 @@ func (s *FrontendMessageHandlers) SetHandleSync(h HandleSync) {
 		return h(ctx, message.ReadSync(raw))
 	}
 }
-func (s *FrontendMessageHandlers) SetHandleTerminate(h HandleTerminate) {
+func (s *ClientMessageHandlers) SetHandleTerminate(h HandleTerminate) {
 	if h == nil {
 		return
 	}
@@ -140,7 +140,7 @@ func (s *FrontendMessageHandlers) SetHandleTerminate(h HandleTerminate) {
 		return h(ctx, message.ReadTerminate(raw))
 	}
 }
-func (s *FrontendMessageHandlers) SetHandleCopyData(h HandleCopyData) {
+func (s *ClientMessageHandlers) SetHandleCopyData(h HandleCopyData) {
 	if h == nil {
 		return
 	}
@@ -148,7 +148,7 @@ func (s *FrontendMessageHandlers) SetHandleCopyData(h HandleCopyData) {
 		return h(ctx, message.ReadCopyData(raw))
 	}
 }
-func (s *FrontendMessageHandlers) SetHandleCopyDone(h HandleCopyDone) {
+func (s *ClientMessageHandlers) SetHandleCopyDone(h HandleCopyDone) {
 	if h == nil {
 		return
 	}

@@ -53,9 +53,9 @@ type HandleAuthentication struct {
 	HandleAuthenticationSASLFinal         HandleAuthenticationSASLFinal
 }
 
-type BackendMessageHandlers map[byte]MessageHandler
+type ServerMessageHandlers map[byte]MessageHandler
 
-func (s *BackendMessageHandlers) SetHandleAuthentication(h HandleAuthentication) {
+func (s *ServerMessageHandlers) SetHandleAuthentication(h HandleAuthentication) {
 	(*s)['R'] = func(ctx *Context, raw []byte) (message.Reader, error) {
 		switch m := message.ReadAuthentication(raw).(type) {
 		case *message.AuthenticationOk:
@@ -121,7 +121,7 @@ func (s *BackendMessageHandlers) SetHandleAuthentication(h HandleAuthentication)
 		return nil, errors.New("fail to cast authentication message")
 	}
 }
-func (s *BackendMessageHandlers) SetHandleBackendKeyData(h HandleBackendKeyData) {
+func (s *ServerMessageHandlers) SetHandleBackendKeyData(h HandleBackendKeyData) {
 	if h == nil {
 		return
 	}
@@ -129,7 +129,7 @@ func (s *BackendMessageHandlers) SetHandleBackendKeyData(h HandleBackendKeyData)
 		return h(ctx, message.ReadBackendKeyData(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleBindComplete(h HandleBindComplete) {
+func (s *ServerMessageHandlers) SetHandleBindComplete(h HandleBindComplete) {
 	if h == nil {
 		return
 	}
@@ -137,7 +137,7 @@ func (s *BackendMessageHandlers) SetHandleBindComplete(h HandleBindComplete) {
 		return h(ctx, message.ReadBindComplete(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleCloseComplete(h HandleCloseComplete) {
+func (s *ServerMessageHandlers) SetHandleCloseComplete(h HandleCloseComplete) {
 	if h == nil {
 		return
 	}
@@ -145,7 +145,7 @@ func (s *BackendMessageHandlers) SetHandleCloseComplete(h HandleCloseComplete) {
 		return h(ctx, message.ReadCloseComplete(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleCommandComplete(h HandleCommandComplete) {
+func (s *ServerMessageHandlers) SetHandleCommandComplete(h HandleCommandComplete) {
 	if h == nil {
 		return
 	}
@@ -153,7 +153,7 @@ func (s *BackendMessageHandlers) SetHandleCommandComplete(h HandleCommandComplet
 		return h(ctx, message.ReadCommandComplete(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleCopyInResponse(h HandleCopyInResponse) {
+func (s *ServerMessageHandlers) SetHandleCopyInResponse(h HandleCopyInResponse) {
 	if h == nil {
 		return
 	}
@@ -161,7 +161,7 @@ func (s *BackendMessageHandlers) SetHandleCopyInResponse(h HandleCopyInResponse)
 		return h(ctx, message.ReadCopyInResponse(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleCopyOutResponse(h HandleCopyOutResponse) {
+func (s *ServerMessageHandlers) SetHandleCopyOutResponse(h HandleCopyOutResponse) {
 	if h == nil {
 		return
 	}
@@ -169,7 +169,7 @@ func (s *BackendMessageHandlers) SetHandleCopyOutResponse(h HandleCopyOutRespons
 		return h(ctx, message.ReadCopyOutResponse(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleCopyBothResponse(h HandleCopyBothResponse) {
+func (s *ServerMessageHandlers) SetHandleCopyBothResponse(h HandleCopyBothResponse) {
 	if h == nil {
 		return
 	}
@@ -177,7 +177,7 @@ func (s *BackendMessageHandlers) SetHandleCopyBothResponse(h HandleCopyBothRespo
 		return h(ctx, message.ReadCopyBothResponse(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleDataRow(h HandleDataRow) {
+func (s *ServerMessageHandlers) SetHandleDataRow(h HandleDataRow) {
 	if h == nil {
 		return
 	}
@@ -185,7 +185,7 @@ func (s *BackendMessageHandlers) SetHandleDataRow(h HandleDataRow) {
 		return h(ctx, message.ReadDataRow(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleEmptyQueryResponse(h HandleEmptyQueryResponse) {
+func (s *ServerMessageHandlers) SetHandleEmptyQueryResponse(h HandleEmptyQueryResponse) {
 	if h == nil {
 		return
 	}
@@ -193,7 +193,7 @@ func (s *BackendMessageHandlers) SetHandleEmptyQueryResponse(h HandleEmptyQueryR
 		return h(ctx, message.ReadEmptyQueryResponse(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleErrorResponse(h HandleErrorResponse) {
+func (s *ServerMessageHandlers) SetHandleErrorResponse(h HandleErrorResponse) {
 	if h == nil {
 		return
 	}
@@ -201,7 +201,7 @@ func (s *BackendMessageHandlers) SetHandleErrorResponse(h HandleErrorResponse) {
 		return h(ctx, message.ReadErrorResponse(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleFunctionCallResponse(h HandleFunctionCallResponse) {
+func (s *ServerMessageHandlers) SetHandleFunctionCallResponse(h HandleFunctionCallResponse) {
 	if h == nil {
 		return
 	}
@@ -209,7 +209,7 @@ func (s *BackendMessageHandlers) SetHandleFunctionCallResponse(h HandleFunctionC
 		return h(ctx, message.ReadFunctionCallResponse(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleNegotiateProtocolVersion(h HandleNegotiateProtocolVersion) {
+func (s *ServerMessageHandlers) SetHandleNegotiateProtocolVersion(h HandleNegotiateProtocolVersion) {
 	if h == nil {
 		return
 	}
@@ -217,7 +217,7 @@ func (s *BackendMessageHandlers) SetHandleNegotiateProtocolVersion(h HandleNegot
 		return h(ctx, message.ReadNegotiateProtocolVersion(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleNoData(h HandleNoData) {
+func (s *ServerMessageHandlers) SetHandleNoData(h HandleNoData) {
 	if h == nil {
 		return
 	}
@@ -225,7 +225,7 @@ func (s *BackendMessageHandlers) SetHandleNoData(h HandleNoData) {
 		return h(ctx, message.ReadNoData(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleNoticeResponse(h HandleNoticeResponse) {
+func (s *ServerMessageHandlers) SetHandleNoticeResponse(h HandleNoticeResponse) {
 	if h == nil {
 		return
 	}
@@ -233,7 +233,7 @@ func (s *BackendMessageHandlers) SetHandleNoticeResponse(h HandleNoticeResponse)
 		return h(ctx, message.ReadNoticeResponse(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleNotificationResponse(h HandleNotificationResponse) {
+func (s *ServerMessageHandlers) SetHandleNotificationResponse(h HandleNotificationResponse) {
 	if h == nil {
 		return
 	}
@@ -241,7 +241,7 @@ func (s *BackendMessageHandlers) SetHandleNotificationResponse(h HandleNotificat
 		return h(ctx, message.ReadNotificationResponse(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleParameterDescription(h HandleParameterDescription) {
+func (s *ServerMessageHandlers) SetHandleParameterDescription(h HandleParameterDescription) {
 	if h == nil {
 		return
 	}
@@ -249,7 +249,7 @@ func (s *BackendMessageHandlers) SetHandleParameterDescription(h HandleParameter
 		return h(ctx, message.ReadParameterDescription(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleParameterStatus(h HandleParameterStatus) {
+func (s *ServerMessageHandlers) SetHandleParameterStatus(h HandleParameterStatus) {
 	if h == nil {
 		return
 	}
@@ -257,7 +257,7 @@ func (s *BackendMessageHandlers) SetHandleParameterStatus(h HandleParameterStatu
 		return h(ctx, message.ReadParameterStatus(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleParseComplete(h HandleParseComplete) {
+func (s *ServerMessageHandlers) SetHandleParseComplete(h HandleParseComplete) {
 	if h == nil {
 		return
 	}
@@ -265,7 +265,7 @@ func (s *BackendMessageHandlers) SetHandleParseComplete(h HandleParseComplete) {
 		return h(ctx, message.ReadParseComplete(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandlePortalSuspended(h HandlePortalSuspended) {
+func (s *ServerMessageHandlers) SetHandlePortalSuspended(h HandlePortalSuspended) {
 	if h == nil {
 		return
 	}
@@ -273,7 +273,7 @@ func (s *BackendMessageHandlers) SetHandlePortalSuspended(h HandlePortalSuspende
 		return h(ctx, message.ReadPortalSuspended(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleReadyForQuery(h HandleReadyForQuery) {
+func (s *ServerMessageHandlers) SetHandleReadyForQuery(h HandleReadyForQuery) {
 	if h == nil {
 		return
 	}
@@ -281,7 +281,7 @@ func (s *BackendMessageHandlers) SetHandleReadyForQuery(h HandleReadyForQuery) {
 		return h(ctx, message.ReadReadyForQuery(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleRowDescription(h HandleRowDescription) {
+func (s *ServerMessageHandlers) SetHandleRowDescription(h HandleRowDescription) {
 	if h == nil {
 		return
 	}
@@ -289,7 +289,7 @@ func (s *BackendMessageHandlers) SetHandleRowDescription(h HandleRowDescription)
 		return h(ctx, message.ReadRowDescription(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleCopyData(h HandleCopyData) {
+func (s *ServerMessageHandlers) SetHandleCopyData(h HandleCopyData) {
 	if h == nil {
 		return
 	}
@@ -297,7 +297,7 @@ func (s *BackendMessageHandlers) SetHandleCopyData(h HandleCopyData) {
 		return h(ctx, message.ReadCopyData(raw))
 	}
 }
-func (s *BackendMessageHandlers) SetHandleCopyDone(h HandleCopyDone) {
+func (s *ServerMessageHandlers) SetHandleCopyDone(h HandleCopyDone) {
 	if h == nil {
 		return
 	}
