@@ -17,7 +17,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer ln.Close()
 
 	clientMessageHandlers := proxy.ClientMessageHandlers{}
 	serverMessageHandlers := proxy.ServerMessageHandlers{}

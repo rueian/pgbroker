@@ -26,10 +26,12 @@ type Server struct {
 
 	stop bool
 	wg   sync.WaitGroup
+	ln   net.Listener
 }
 
 func (s *Server) Serve(ln net.Listener) error {
-	for !s.stop {
+	s.ln = ln
+	for {
 		conn, err := ln.Accept()
 		if err != nil {
 			return err
@@ -38,22 +40,21 @@ func (s *Server) Serve(ln net.Listener) error {
 		go func() {
 			s.wg.Add(1)
 			defer s.wg.Done()
+			defer conn.Close()
 			if err := s.handleConn(conn); err != nil {
 				// TODO: log error
 			}
 		}()
 	}
-	return nil
 }
 
 func (s *Server) Shutdown() {
 	s.stop = true
+	s.ln.Close()
 	s.wg.Wait()
 }
 
 func (s *Server) handleConn(client net.Conn) (err error) {
-	defer client.Close()
-
 	s.ServerMessageHandlers.SetHandleBackendKeyData(func(ctx *Context, msg *message.BackendKeyData) (data *message.BackendKeyData, e error) {
 		ctx.ConnInfo.BackendProcessID = msg.ProcessID
 		ctx.ConnInfo.BackendSecretKey = msg.SecretKey
@@ -75,9 +76,9 @@ func (s *Server) handleConn(client net.Conn) (err error) {
 		if m, ok := startup.(*message.CancelRequest); ok {
 			info, err := s.ConnInfoStore.Find(client.RemoteAddr(), m.ProcessID, m.SecretKey)
 			if info != nil {
-				if conn, err := net.Dial("tcp", info.ServerAddress.String()); err == nil {
-					io.Copy(conn, m.Reader())
-					conn.Close()
+				if server, err = net.Dial("tcp", info.ServerAddress.String()); err == nil {
+					io.Copy(server, m.Reader())
+					server.Close()
 				}
 			}
 			if err != nil {
@@ -110,26 +111,26 @@ func (s *Server) handleConn(client net.Conn) (err error) {
 		return err
 	}
 
-	readCh := make(chan error)
-	writeCh := make(chan error)
+	clientCh := make(chan error)
+	serverCh := make(chan error)
 
 	go func() {
-		defer close(readCh)
-		readCh <- s.processMessages(ctx, client, server, s.ClientMessageHandlers)
+		defer close(clientCh)
+		clientCh <- s.processMessages(ctx, client, server, s.ClientMessageHandlers)
 	}()
 
 	go func() {
-		defer close(writeCh)
-		writeCh <- s.processMessages(ctx, server, client, s.ServerMessageHandlers)
+		defer close(serverCh)
+		serverCh <- s.processMessages(ctx, server, client, s.ServerMessageHandlers)
 	}()
 
 	var wait chan error
 
 	select {
-	case <-readCh:
-		wait = writeCh
-	case <-writeCh:
-		wait = readCh
+	case <-clientCh:
+		wait = serverCh
+	case <-serverCh:
+		wait = clientCh
 	}
 
 	select {
