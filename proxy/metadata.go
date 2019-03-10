@@ -1,6 +1,8 @@
 package proxy
 
 import (
+	"context"
+
 	"github.com/rueian/pgbroker/backend"
 	"github.com/rueian/pgbroker/message"
 )
@@ -15,8 +17,9 @@ const (
 	PhaseOK
 )
 
-type Context struct {
+type Metadata struct {
 	ConnInfo       backend.ConnInfo
 	RowDescription *message.RowDescription
 	AuthPhase      AuthPhase
+	Context        context.Context
 }

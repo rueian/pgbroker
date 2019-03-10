@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"io"
 	"net"
@@ -55,7 +56,7 @@ func (s *Server) Shutdown() {
 }
 
 func (s *Server) handleConn(client net.Conn) (err error) {
-	s.ServerMessageHandlers.SetHandleBackendKeyData(func(ctx *Context, msg *message.BackendKeyData) (data *message.BackendKeyData, e error) {
+	s.ServerMessageHandlers.SetHandleBackendKeyData(func(ctx *Metadata, msg *message.BackendKeyData) (data *message.BackendKeyData, e error) {
 		ctx.ConnInfo.BackendProcessID = msg.ProcessID
 		ctx.ConnInfo.BackendSecretKey = msg.SecretKey
 		if err := s.ConnInfoStore.Save(&ctx.ConnInfo); err != nil {
@@ -64,7 +65,10 @@ func (s *Server) handleConn(client net.Conn) (err error) {
 		return msg, nil
 	})
 
-	ctx := &Context{}
+	ctx := &Metadata{
+		Context:   context.Background(),
+		AuthPhase: PhaseStartup,
+	}
 
 	var server net.Conn
 	var startup message.Reader
@@ -159,7 +163,7 @@ func (s *Server) readStartupMessage(client io.Reader) (message.Reader, error) {
 	return m, nil
 }
 
-func (s *Server) processMessages(ctx *Context, in io.Reader, out io.Writer, handlers map[byte]MessageHandler) error {
+func (s *Server) processMessages(ctx *Metadata, in io.Reader, out io.Writer, handlers map[byte]MessageHandler) error {
 	for !s.stop {
 		c := container{}
 
@@ -196,7 +200,7 @@ func (s *Server) processMessages(ctx *Context, in io.Reader, out io.Writer, hand
 	return nil
 }
 
-type MessageHandler func(*Context, []byte) (message.Reader, error)
+type MessageHandler func(*Metadata, []byte) (message.Reader, error)
 
 type container struct {
 	head []byte

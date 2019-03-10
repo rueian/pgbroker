@@ -6,38 +6,38 @@ import (
 	"github.com/rueian/pgbroker/message"
 )
 
-type HandleAuthenticationOk func(ctx *Context, msg *message.AuthenticationOk) (*message.AuthenticationOk, error)
-type HandleAuthenticationKerberosV5 func(ctx *Context, msg *message.AuthenticationKerberosV5) (*message.AuthenticationKerberosV5, error)
-type HandleAuthenticationCleartextPassword func(ctx *Context, msg *message.AuthenticationCleartextPassword) (*message.AuthenticationCleartextPassword, error)
-type HandleAuthenticationMD5Password func(ctx *Context, msg *message.AuthenticationMD5Password) (*message.AuthenticationMD5Password, error)
-type HandleAuthenticationSCMCredential func(ctx *Context, msg *message.AuthenticationSCMCredential) (*message.AuthenticationSCMCredential, error)
-type HandleAuthenticationGSS func(ctx *Context, msg *message.AuthenticationGSS) (*message.AuthenticationGSS, error)
-type HandleAuthenticationSSPI func(ctx *Context, msg *message.AuthenticationSSPI) (*message.AuthenticationSSPI, error)
-type HandleAuthenticationGSSContinue func(ctx *Context, msg *message.AuthenticationGSSContinue) (*message.AuthenticationGSSContinue, error)
-type HandleAuthenticationSASL func(ctx *Context, msg *message.AuthenticationSASL) (*message.AuthenticationSASL, error)
-type HandleAuthenticationSASLContinue func(ctx *Context, msg *message.AuthenticationSASLContinue) (*message.AuthenticationSASLContinue, error)
-type HandleAuthenticationSASLFinal func(ctx *Context, msg *message.AuthenticationSASLFinal) (*message.AuthenticationSASLFinal, error)
-type HandleBackendKeyData func(ctx *Context, msg *message.BackendKeyData) (*message.BackendKeyData, error)
-type HandleBindComplete func(ctx *Context, msg *message.BindComplete) (*message.BindComplete, error)
-type HandleCloseComplete func(ctx *Context, msg *message.CloseComplete) (*message.CloseComplete, error)
-type HandleCommandComplete func(ctx *Context, msg *message.CommandComplete) (*message.CommandComplete, error)
-type HandleCopyInResponse func(ctx *Context, msg *message.CopyInResponse) (*message.CopyInResponse, error)
-type HandleCopyOutResponse func(ctx *Context, msg *message.CopyOutResponse) (*message.CopyOutResponse, error)
-type HandleCopyBothResponse func(ctx *Context, msg *message.CopyBothResponse) (*message.CopyBothResponse, error)
-type HandleDataRow func(ctx *Context, msg *message.DataRow) (*message.DataRow, error)
-type HandleEmptyQueryResponse func(ctx *Context, msg *message.EmptyQueryResponse) (*message.EmptyQueryResponse, error)
-type HandleErrorResponse func(ctx *Context, msg *message.ErrorResponse) (*message.ErrorResponse, error)
-type HandleFunctionCallResponse func(ctx *Context, msg *message.FunctionCallResponse) (*message.FunctionCallResponse, error)
-type HandleNegotiateProtocolVersion func(ctx *Context, msg *message.NegotiateProtocolVersion) (*message.NegotiateProtocolVersion, error)
-type HandleNoData func(ctx *Context, msg *message.NoData) (*message.NoData, error)
-type HandleNoticeResponse func(ctx *Context, msg *message.NoticeResponse) (*message.NoticeResponse, error)
-type HandleNotificationResponse func(ctx *Context, msg *message.NotificationResponse) (*message.NotificationResponse, error)
-type HandleParameterDescription func(ctx *Context, msg *message.ParameterDescription) (*message.ParameterDescription, error)
-type HandleParameterStatus func(ctx *Context, msg *message.ParameterStatus) (*message.ParameterStatus, error)
-type HandleParseComplete func(ctx *Context, msg *message.ParseComplete) (*message.ParseComplete, error)
-type HandlePortalSuspended func(ctx *Context, msg *message.PortalSuspended) (*message.PortalSuspended, error)
-type HandleReadyForQuery func(ctx *Context, msg *message.ReadyForQuery) (*message.ReadyForQuery, error)
-type HandleRowDescription func(ctx *Context, msg *message.RowDescription) (*message.RowDescription, error)
+type HandleAuthenticationOk func(ctx *Metadata, msg *message.AuthenticationOk) (*message.AuthenticationOk, error)
+type HandleAuthenticationKerberosV5 func(ctx *Metadata, msg *message.AuthenticationKerberosV5) (*message.AuthenticationKerberosV5, error)
+type HandleAuthenticationCleartextPassword func(ctx *Metadata, msg *message.AuthenticationCleartextPassword) (*message.AuthenticationCleartextPassword, error)
+type HandleAuthenticationMD5Password func(ctx *Metadata, msg *message.AuthenticationMD5Password) (*message.AuthenticationMD5Password, error)
+type HandleAuthenticationSCMCredential func(ctx *Metadata, msg *message.AuthenticationSCMCredential) (*message.AuthenticationSCMCredential, error)
+type HandleAuthenticationGSS func(ctx *Metadata, msg *message.AuthenticationGSS) (*message.AuthenticationGSS, error)
+type HandleAuthenticationSSPI func(ctx *Metadata, msg *message.AuthenticationSSPI) (*message.AuthenticationSSPI, error)
+type HandleAuthenticationGSSContinue func(ctx *Metadata, msg *message.AuthenticationGSSContinue) (*message.AuthenticationGSSContinue, error)
+type HandleAuthenticationSASL func(ctx *Metadata, msg *message.AuthenticationSASL) (*message.AuthenticationSASL, error)
+type HandleAuthenticationSASLContinue func(ctx *Metadata, msg *message.AuthenticationSASLContinue) (*message.AuthenticationSASLContinue, error)
+type HandleAuthenticationSASLFinal func(ctx *Metadata, msg *message.AuthenticationSASLFinal) (*message.AuthenticationSASLFinal, error)
+type HandleBackendKeyData func(ctx *Metadata, msg *message.BackendKeyData) (*message.BackendKeyData, error)
+type HandleBindComplete func(ctx *Metadata, msg *message.BindComplete) (*message.BindComplete, error)
+type HandleCloseComplete func(ctx *Metadata, msg *message.CloseComplete) (*message.CloseComplete, error)
+type HandleCommandComplete func(ctx *Metadata, msg *message.CommandComplete) (*message.CommandComplete, error)
+type HandleCopyInResponse func(ctx *Metadata, msg *message.CopyInResponse) (*message.CopyInResponse, error)
+type HandleCopyOutResponse func(ctx *Metadata, msg *message.CopyOutResponse) (*message.CopyOutResponse, error)
+type HandleCopyBothResponse func(ctx *Metadata, msg *message.CopyBothResponse) (*message.CopyBothResponse, error)
+type HandleDataRow func(ctx *Metadata, msg *message.DataRow) (*message.DataRow, error)
+type HandleEmptyQueryResponse func(ctx *Metadata, msg *message.EmptyQueryResponse) (*message.EmptyQueryResponse, error)
+type HandleErrorResponse func(ctx *Metadata, msg *message.ErrorResponse) (*message.ErrorResponse, error)
+type HandleFunctionCallResponse func(ctx *Metadata, msg *message.FunctionCallResponse) (*message.FunctionCallResponse, error)
+type HandleNegotiateProtocolVersion func(ctx *Metadata, msg *message.NegotiateProtocolVersion) (*message.NegotiateProtocolVersion, error)
+type HandleNoData func(ctx *Metadata, msg *message.NoData) (*message.NoData, error)
+type HandleNoticeResponse func(ctx *Metadata, msg *message.NoticeResponse) (*message.NoticeResponse, error)
+type HandleNotificationResponse func(ctx *Metadata, msg *message.NotificationResponse) (*message.NotificationResponse, error)
+type HandleParameterDescription func(ctx *Metadata, msg *message.ParameterDescription) (*message.ParameterDescription, error)
+type HandleParameterStatus func(ctx *Metadata, msg *message.ParameterStatus) (*message.ParameterStatus, error)
+type HandleParseComplete func(ctx *Metadata, msg *message.ParseComplete) (*message.ParseComplete, error)
+type HandlePortalSuspended func(ctx *Metadata, msg *message.PortalSuspended) (*message.PortalSuspended, error)
+type HandleReadyForQuery func(ctx *Metadata, msg *message.ReadyForQuery) (*message.ReadyForQuery, error)
+type HandleRowDescription func(ctx *Metadata, msg *message.RowDescription) (*message.RowDescription, error)
 
 type HandleAuthentication struct {
 	HandleAuthenticationOk                HandleAuthenticationOk
@@ -56,7 +56,7 @@ type HandleAuthentication struct {
 type ServerMessageHandlers map[byte]MessageHandler
 
 func (s *ServerMessageHandlers) SetHandleAuthentication(h HandleAuthentication) {
-	(*s)['R'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['R'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		switch m := message.ReadAuthentication(raw).(type) {
 		case *message.AuthenticationOk:
 			ctx.AuthPhase = PhaseOK
@@ -125,7 +125,7 @@ func (s *ServerMessageHandlers) SetHandleBackendKeyData(h HandleBackendKeyData) 
 	if h == nil {
 		return
 	}
-	(*s)['K'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['K'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadBackendKeyData(raw))
 	}
 }
@@ -133,7 +133,7 @@ func (s *ServerMessageHandlers) SetHandleBindComplete(h HandleBindComplete) {
 	if h == nil {
 		return
 	}
-	(*s)['2'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['2'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadBindComplete(raw))
 	}
 }
@@ -141,7 +141,7 @@ func (s *ServerMessageHandlers) SetHandleCloseComplete(h HandleCloseComplete) {
 	if h == nil {
 		return
 	}
-	(*s)['3'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['3'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadCloseComplete(raw))
 	}
 }
@@ -149,7 +149,7 @@ func (s *ServerMessageHandlers) SetHandleCommandComplete(h HandleCommandComplete
 	if h == nil {
 		return
 	}
-	(*s)['C'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['C'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadCommandComplete(raw))
 	}
 }
@@ -157,7 +157,7 @@ func (s *ServerMessageHandlers) SetHandleCopyInResponse(h HandleCopyInResponse) 
 	if h == nil {
 		return
 	}
-	(*s)['G'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['G'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadCopyInResponse(raw))
 	}
 }
@@ -165,7 +165,7 @@ func (s *ServerMessageHandlers) SetHandleCopyOutResponse(h HandleCopyOutResponse
 	if h == nil {
 		return
 	}
-	(*s)['H'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['H'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadCopyOutResponse(raw))
 	}
 }
@@ -173,7 +173,7 @@ func (s *ServerMessageHandlers) SetHandleCopyBothResponse(h HandleCopyBothRespon
 	if h == nil {
 		return
 	}
-	(*s)['W'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['W'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadCopyBothResponse(raw))
 	}
 }
@@ -181,7 +181,7 @@ func (s *ServerMessageHandlers) SetHandleDataRow(h HandleDataRow) {
 	if h == nil {
 		return
 	}
-	(*s)['D'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['D'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadDataRow(raw))
 	}
 }
@@ -189,7 +189,7 @@ func (s *ServerMessageHandlers) SetHandleEmptyQueryResponse(h HandleEmptyQueryRe
 	if h == nil {
 		return
 	}
-	(*s)['I'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['I'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadEmptyQueryResponse(raw))
 	}
 }
@@ -197,7 +197,7 @@ func (s *ServerMessageHandlers) SetHandleErrorResponse(h HandleErrorResponse) {
 	if h == nil {
 		return
 	}
-	(*s)['E'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['E'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadErrorResponse(raw))
 	}
 }
@@ -205,7 +205,7 @@ func (s *ServerMessageHandlers) SetHandleFunctionCallResponse(h HandleFunctionCa
 	if h == nil {
 		return
 	}
-	(*s)['V'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['V'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadFunctionCallResponse(raw))
 	}
 }
@@ -213,7 +213,7 @@ func (s *ServerMessageHandlers) SetHandleNegotiateProtocolVersion(h HandleNegoti
 	if h == nil {
 		return
 	}
-	(*s)['v'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['v'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadNegotiateProtocolVersion(raw))
 	}
 }
@@ -221,7 +221,7 @@ func (s *ServerMessageHandlers) SetHandleNoData(h HandleNoData) {
 	if h == nil {
 		return
 	}
-	(*s)['n'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['n'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadNoData(raw))
 	}
 }
@@ -229,7 +229,7 @@ func (s *ServerMessageHandlers) SetHandleNoticeResponse(h HandleNoticeResponse) 
 	if h == nil {
 		return
 	}
-	(*s)['N'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['N'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadNoticeResponse(raw))
 	}
 }
@@ -237,7 +237,7 @@ func (s *ServerMessageHandlers) SetHandleNotificationResponse(h HandleNotificati
 	if h == nil {
 		return
 	}
-	(*s)['A'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['A'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadNotificationResponse(raw))
 	}
 }
@@ -245,7 +245,7 @@ func (s *ServerMessageHandlers) SetHandleParameterDescription(h HandleParameterD
 	if h == nil {
 		return
 	}
-	(*s)['t'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['t'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadParameterDescription(raw))
 	}
 }
@@ -253,7 +253,7 @@ func (s *ServerMessageHandlers) SetHandleParameterStatus(h HandleParameterStatus
 	if h == nil {
 		return
 	}
-	(*s)['S'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['S'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadParameterStatus(raw))
 	}
 }
@@ -261,7 +261,7 @@ func (s *ServerMessageHandlers) SetHandleParseComplete(h HandleParseComplete) {
 	if h == nil {
 		return
 	}
-	(*s)['1'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['1'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadParseComplete(raw))
 	}
 }
@@ -269,7 +269,7 @@ func (s *ServerMessageHandlers) SetHandlePortalSuspended(h HandlePortalSuspended
 	if h == nil {
 		return
 	}
-	(*s)['s'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['s'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadPortalSuspended(raw))
 	}
 }
@@ -277,7 +277,7 @@ func (s *ServerMessageHandlers) SetHandleReadyForQuery(h HandleReadyForQuery) {
 	if h == nil {
 		return
 	}
-	(*s)['Z'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['Z'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadReadyForQuery(raw))
 	}
 }
@@ -285,7 +285,7 @@ func (s *ServerMessageHandlers) SetHandleRowDescription(h HandleRowDescription) 
 	if h == nil {
 		return
 	}
-	(*s)['T'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['T'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadRowDescription(raw))
 	}
 }
@@ -293,7 +293,7 @@ func (s *ServerMessageHandlers) SetHandleCopyData(h HandleCopyData) {
 	if h == nil {
 		return
 	}
-	(*s)['d'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['d'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadCopyData(raw))
 	}
 }
@@ -301,7 +301,7 @@ func (s *ServerMessageHandlers) SetHandleCopyDone(h HandleCopyDone) {
 	if h == nil {
 		return
 	}
-	(*s)['c'] = func(ctx *Context, raw []byte) (message.Reader, error) {
+	(*s)['c'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
 		return h(ctx, message.ReadCopyDone(raw))
 	}
 }
