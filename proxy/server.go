@@ -22,8 +22,8 @@ const (
 type Server struct {
 	PGResolver            backend.PGResolver
 	ConnInfoStore         backend.ConnInfoStore
-	ClientMessageHandlers ClientMessageHandlers
-	ServerMessageHandlers ServerMessageHandlers
+	ClientMessageHandlers *ClientMessageHandlers
+	ServerMessageHandlers *ServerMessageHandlers
 
 	stop bool
 	wg   sync.WaitGroup
@@ -56,7 +56,7 @@ func (s *Server) Shutdown() {
 }
 
 func (s *Server) handleConn(client net.Conn) (err error) {
-	s.ServerMessageHandlers.SetHandleBackendKeyData(func(ctx *Metadata, msg *message.BackendKeyData) (data *message.BackendKeyData, e error) {
+	s.ServerMessageHandlers.AddHandleBackendKeyData(func(ctx *Metadata, msg *message.BackendKeyData) (data *message.BackendKeyData, e error) {
 		ctx.ConnInfo.BackendProcessID = msg.ProcessID
 		ctx.ConnInfo.BackendSecretKey = msg.SecretKey
 		if err := s.ConnInfoStore.Save(&ctx.ConnInfo); err != nil {
@@ -163,7 +163,7 @@ func (s *Server) readStartupMessage(client io.Reader) (message.Reader, error) {
 	return m, nil
 }
 
-func (s *Server) processMessages(ctx *Metadata, in io.Reader, out io.Writer, handlers map[byte]MessageHandler) error {
+func (s *Server) processMessages(ctx *Metadata, in io.Reader, out io.Writer, hg MessageHandlerRegister) error {
 	for !s.stop {
 		c := container{}
 
@@ -172,7 +172,7 @@ func (s *Server) processMessages(ctx *Metadata, in io.Reader, out io.Writer, han
 			return err
 		}
 
-		if handler, ok := handlers[c.GetType()]; ok {
+		if handler := hg.GetHandler(c.GetType()); handler != nil {
 			c.data = make([]byte, c.GetSize()-MessageSizeLength)
 			if _, err := io.ReadFull(in, c.data); err != nil {
 				return err
@@ -199,8 +199,6 @@ func (s *Server) processMessages(ctx *Metadata, in io.Reader, out io.Writer, han
 	}
 	return nil
 }
-
-type MessageHandler func(*Metadata, []byte) (message.Reader, error)
 
 type container struct {
 	head []byte

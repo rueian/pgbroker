@@ -18,18 +18,18 @@ func main() {
 		panic(err)
 	}
 
-	clientMessageHandlers := proxy.ClientMessageHandlers{}
-	serverMessageHandlers := proxy.ServerMessageHandlers{}
+	clientMessageHandlers := proxy.NewClientMessageHandlers()
+	serverMessageHandlers := proxy.NewServerMessageHandlers()
 
-	clientMessageHandlers.SetHandleQuery(func(ctx *proxy.Metadata, msg *message.Query) (query *message.Query, e error) {
+	clientMessageHandlers.AddHandleQuery(func(ctx *proxy.Metadata, msg *message.Query) (query *message.Query, e error) {
 		fmt.Println("Query: ", msg.QueryString)
 		return msg, nil
 	})
-	serverMessageHandlers.SetHandleRowDescription(func(ctx *proxy.Metadata, msg *message.RowDescription) (data *message.RowDescription, e error) {
+	serverMessageHandlers.AddHandleRowDescription(func(ctx *proxy.Metadata, msg *message.RowDescription) (data *message.RowDescription, e error) {
 		ctx.RowDescription = msg
 		return msg, nil
 	})
-	serverMessageHandlers.SetHandleDataRow(func(ctx *proxy.Metadata, msg *message.DataRow) (data *message.DataRow, e error) {
+	serverMessageHandlers.AddHandleDataRow(func(ctx *proxy.Metadata, msg *message.DataRow) (data *message.DataRow, e error) {
 		fmt.Printf("DataDes\t")
 		for _, f := range ctx.RowDescription.Fields {
 			fmt.Printf("%s\t", f.Name)

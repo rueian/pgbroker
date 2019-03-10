@@ -1,158 +1,407 @@
 package proxy
 
-import "github.com/rueian/pgbroker/message"
+import (
+	"github.com/rueian/pgbroker/message"
+)
 
-type HandleBind func(ctx *Metadata, msg *message.Bind) (*message.Bind, error)
-type HandleClose func(ctx *Metadata, msg *message.Close) (*message.Close, error)
-type HandleCopyFail func(ctx *Metadata, msg *message.CopyFail) (*message.CopyFail, error)
-type HandleDescribe func(ctx *Metadata, msg *message.Describe) (*message.Describe, error)
-type HandleExecute func(ctx *Metadata, msg *message.Execute) (*message.Execute, error)
-type HandleFlush func(ctx *Metadata, msg *message.Flush) (*message.Flush, error)
-type HandleFunctionCall func(ctx *Metadata, msg *message.FunctionCall) (*message.FunctionCall, error)
-type HandleParse func(ctx *Metadata, msg *message.Parse) (*message.Parse, error)
-type HandlePasswordMessage func(ctx *Metadata, msg *message.PasswordMessage) (*message.PasswordMessage, error)
-type HandleGSSResponse func(ctx *Metadata, msg *message.GSSResponse) (*message.GSSResponse, error)
-type HandleSASLInitialResponse func(ctx *Metadata, msg *message.SASLInitialResponse) (*message.SASLInitialResponse, error)
-type HandleSASLResponse func(ctx *Metadata, msg *message.SASLResponse) (*message.SASLResponse, error)
-type HandleQuery func(ctx *Metadata, msg *message.Query) (*message.Query, error)
-type HandleSync func(ctx *Metadata, msg *message.Sync) (*message.Sync, error)
-type HandleTerminate func(ctx *Metadata, msg *message.Terminate) (*message.Terminate, error)
-type HandleCopyData func(ctx *Metadata, msg *message.CopyData) (*message.CopyData, error)
-type HandleCopyDone func(ctx *Metadata, msg *message.CopyDone) (*message.CopyDone, error)
+type HandleBind func(md *Metadata, msg *message.Bind) (*message.Bind, error)
+type HandleClose func(md *Metadata, msg *message.Close) (*message.Close, error)
+type HandleCopyFail func(md *Metadata, msg *message.CopyFail) (*message.CopyFail, error)
+type HandleDescribe func(md *Metadata, msg *message.Describe) (*message.Describe, error)
+type HandleExecute func(md *Metadata, msg *message.Execute) (*message.Execute, error)
+type HandleFlush func(md *Metadata, msg *message.Flush) (*message.Flush, error)
+type HandleFunctionCall func(md *Metadata, msg *message.FunctionCall) (*message.FunctionCall, error)
+type HandleParse func(md *Metadata, msg *message.Parse) (*message.Parse, error)
+type HandlePasswordMessage func(md *Metadata, msg *message.PasswordMessage) (*message.PasswordMessage, error)
+type HandleGSSResponse func(md *Metadata, msg *message.GSSResponse) (*message.GSSResponse, error)
+type HandleSASLInitialResponse func(md *Metadata, msg *message.SASLInitialResponse) (*message.SASLInitialResponse, error)
+type HandleSASLResponse func(md *Metadata, msg *message.SASLResponse) (*message.SASLResponse, error)
+type HandleQuery func(md *Metadata, msg *message.Query) (*message.Query, error)
+type HandleSync func(md *Metadata, msg *message.Sync) (*message.Sync, error)
+type HandleTerminate func(md *Metadata, msg *message.Terminate) (*message.Terminate, error)
+type HandleCopyData func(md *Metadata, msg *message.CopyData) (*message.CopyData, error)
+type HandleCopyDone func(md *Metadata, msg *message.CopyDone) (*message.CopyDone, error)
 
-type HandleAuthenticationResponse struct {
-	HandlePasswordMessage     HandlePasswordMessage
-	HandleGSSResponse         HandleGSSResponse
-	HandleSASLInitialResponse HandleSASLInitialResponse
-	HandleSASLResponse        HandleSASLResponse
+type ClientMessageHandlers struct {
+	m                         map[byte]MessageHandler
+	handleBind                []HandleBind
+	handleClose               []HandleClose
+	handleCopyFail            []HandleCopyFail
+	handleDescribe            []HandleDescribe
+	handleExecute             []HandleExecute
+	handleFlush               []HandleFlush
+	handleFunctionCall        []HandleFunctionCall
+	handleParse               []HandleParse
+	handlePasswordMessage     []HandlePasswordMessage
+	handleGSSResponse         []HandleGSSResponse
+	handleSASLInitialResponse []HandleSASLInitialResponse
+	handleSASLResponse        []HandleSASLResponse
+	handleQuery               []HandleQuery
+	handleSync                []HandleSync
+	handleTerminate           []HandleTerminate
+	handleCopyData            []HandleCopyData
+	handleCopyDone            []HandleCopyDone
 }
 
-type ClientMessageHandlers map[byte]MessageHandler
+func NewClientMessageHandlers() *ClientMessageHandlers {
+	return &ClientMessageHandlers{m: make(map[byte]MessageHandler)}
+}
 
-func (s *ClientMessageHandlers) SetHandleBind(h HandleBind) {
-	if h == nil {
-		return
+func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
+	if handler, ok := s.m[b]; ok {
+		return handler
 	}
-	(*s)['B'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
-		return h(ctx, message.ReadBind(raw))
-	}
-}
-func (s *ClientMessageHandlers) SetHandleClose(h HandleClose) {
-	if h == nil {
-		return
-	}
-	(*s)['C'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
-		return h(ctx, message.ReadClose(raw))
-	}
-}
-func (s *ClientMessageHandlers) SetHandleCopyFail(h HandleCopyFail) {
-	if h == nil {
-		return
-	}
-	(*s)['f'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
-		return h(ctx, message.ReadCopyFail(raw))
-	}
-}
-func (s *ClientMessageHandlers) SetHandleDescribe(h HandleDescribe) {
-	if h == nil {
-		return
-	}
-	(*s)['D'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
-		return h(ctx, message.ReadDescribe(raw))
-	}
-}
-func (s *ClientMessageHandlers) SetHandleExecute(h HandleExecute) {
-	if h == nil {
-		return
-	}
-	(*s)['E'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
-		return h(ctx, message.ReadExecute(raw))
-	}
-}
-func (s *ClientMessageHandlers) SetHandleFlush(h HandleFlush) {
-	if h == nil {
-		return
-	}
-	(*s)['H'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
-		return h(ctx, message.ReadFlush(raw))
-	}
-}
-func (s *ClientMessageHandlers) SetHandleFunctionCall(h HandleFunctionCall) {
-	if h == nil {
-		return
-	}
-	(*s)['F'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
-		return h(ctx, message.ReadFunctionCall(raw))
-	}
-}
-func (s *ClientMessageHandlers) SetHandleParse(h HandleParse) {
-	if h == nil {
-		return
-	}
-	(*s)['P'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
-		return h(ctx, message.ReadParse(raw))
-	}
-}
-func (s *ClientMessageHandlers) SetHandlePMessage(h HandleAuthenticationResponse) {
-	(*s)['p'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
-		switch ctx.AuthPhase {
-		case PhaseSASLInit:
-			if h.HandleSASLInitialResponse == nil {
-				return message.ReadSASLInitialResponse(raw), nil
-			}
-			return h.HandleSASLInitialResponse(ctx, message.ReadSASLInitialResponse(raw))
-		case PhaseSASL:
-			if h.HandleSASLResponse == nil {
-				return message.ReadSASLResponse(raw), nil
-			}
-			return h.HandleSASLResponse(ctx, message.ReadSASLResponse(raw))
-		case PhaseGSS:
-			if h.HandleGSSResponse == nil {
-				return message.ReadGSSResponse(raw), nil
-			}
-			return h.HandleGSSResponse(ctx, message.ReadGSSResponse(raw))
-		default:
-			return h.HandlePasswordMessage(ctx, message.ReadPasswordMessage(raw))
+	switch b {
+	case 'B':
+		if len(s.handleBind) == 0 {
+			s.m[b] = nil
+			break
 		}
+		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+			var err error
+			msg := message.ReadBind(raw)
+			for _, h := range s.handleBind {
+				if msg, err = h(md, msg); err != nil {
+					break
+				}
+			}
+			return msg, err
+		}
+		return s.m[b]
+	case 'C':
+		if len(s.handleClose) == 0 {
+			s.m[b] = nil
+			break
+		}
+		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+			var err error
+			msg := message.ReadClose(raw)
+			for _, h := range s.handleClose {
+				if msg, err = h(md, msg); err != nil {
+					break
+				}
+			}
+			return msg, err
+		}
+		return s.m[b]
+	case 'f':
+		if len(s.handleCopyFail) == 0 {
+			s.m[b] = nil
+			break
+		}
+		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+			var err error
+			msg := message.ReadCopyFail(raw)
+			for _, h := range s.handleCopyFail {
+				if msg, err = h(md, msg); err != nil {
+					break
+				}
+			}
+			return msg, err
+		}
+		return s.m[b]
+	case 'D':
+		if len(s.handleDescribe) == 0 {
+			s.m[b] = nil
+			break
+		}
+		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+			var err error
+			msg := message.ReadDescribe(raw)
+			for _, h := range s.handleDescribe {
+				if msg, err = h(md, msg); err != nil {
+					break
+				}
+			}
+			return msg, err
+		}
+		return s.m[b]
+	case 'E':
+		if len(s.handleExecute) == 0 {
+			s.m[b] = nil
+			break
+		}
+		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+			var err error
+			msg := message.ReadExecute(raw)
+			for _, h := range s.handleExecute {
+				if msg, err = h(md, msg); err != nil {
+					break
+				}
+			}
+			return msg, err
+		}
+		return s.m[b]
+	case 'H':
+		if len(s.handleFlush) == 0 {
+			s.m[b] = nil
+			break
+		}
+		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+			var err error
+			msg := message.ReadFlush(raw)
+			for _, h := range s.handleFlush {
+				if msg, err = h(md, msg); err != nil {
+					break
+				}
+			}
+			return msg, err
+		}
+		return s.m[b]
+	case 'F':
+		if len(s.handleFunctionCall) == 0 {
+			s.m[b] = nil
+			break
+		}
+		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+			var err error
+			msg := message.ReadFunctionCall(raw)
+			for _, h := range s.handleFunctionCall {
+				if msg, err = h(md, msg); err != nil {
+					break
+				}
+			}
+			return msg, err
+		}
+		return s.m[b]
+	case 'P':
+		if len(s.handleParse) == 0 {
+			s.m[b] = nil
+			break
+		}
+		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+			var err error
+			msg := message.ReadParse(raw)
+			for _, h := range s.handleParse {
+				if msg, err = h(md, msg); err != nil {
+					break
+				}
+			}
+			return msg, err
+		}
+		return s.m[b]
+	case 'Q':
+		if len(s.handleQuery) == 0 {
+			s.m[b] = nil
+			break
+		}
+		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+			var err error
+			msg := message.ReadQuery(raw)
+			for _, h := range s.handleQuery {
+				if msg, err = h(md, msg); err != nil {
+					break
+				}
+			}
+			return msg, err
+		}
+		return s.m[b]
+	case 'S':
+		if len(s.handleSync) == 0 {
+			s.m[b] = nil
+			break
+		}
+		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+			var err error
+			msg := message.ReadSync(raw)
+			for _, h := range s.handleSync {
+				if msg, err = h(md, msg); err != nil {
+					break
+				}
+			}
+			return msg, err
+		}
+		return s.m[b]
+	case 'X':
+		if len(s.handleTerminate) == 0 {
+			s.m[b] = nil
+			break
+		}
+		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+			var err error
+			msg := message.ReadTerminate(raw)
+			for _, h := range s.handleTerminate {
+				if msg, err = h(md, msg); err != nil {
+					break
+				}
+			}
+			return msg, err
+		}
+		return s.m[b]
+	case 'd':
+		if len(s.handleCopyData) == 0 {
+			s.m[b] = nil
+			break
+		}
+		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+			var err error
+			msg := message.ReadCopyData(raw)
+			for _, h := range s.handleCopyData {
+				if msg, err = h(md, msg); err != nil {
+					break
+				}
+			}
+			return msg, err
+		}
+		return s.m[b]
+	case 'c':
+		if len(s.handleCopyDone) == 0 {
+			s.m[b] = nil
+			break
+		}
+		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+			var err error
+			msg := message.ReadCopyDone(raw)
+			for _, h := range s.handleCopyDone {
+				if msg, err = h(md, msg); err != nil {
+					break
+				}
+			}
+			return msg, err
+		}
+		return s.m[b]
+	case 'p':
+		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+			var err error
+			switch md.AuthPhase {
+			case PhaseSASLInit:
+				msg := message.ReadSASLInitialResponse(raw)
+				for _, h := range s.handleSASLInitialResponse {
+					if msg, err = h(md, msg); err != nil {
+						break
+					}
+				}
+				return msg, err
+			case PhaseSASL:
+				msg := message.ReadSASLResponse(raw)
+				for _, h := range s.handleSASLResponse {
+					if msg, err = h(md, msg); err != nil {
+						break
+					}
+				}
+				return msg, err
+			case PhaseGSS:
+				msg := message.ReadGSSResponse(raw)
+				for _, h := range s.handleGSSResponse {
+					if msg, err = h(md, msg); err != nil {
+						break
+					}
+				}
+				return msg, err
+			default:
+				msg := message.ReadPasswordMessage(raw)
+				for _, h := range s.handlePasswordMessage {
+					if msg, err = h(md, msg); err != nil {
+						break
+					}
+				}
+				return msg, err
+			}
+		}
+		return s.m[b]
 	}
+	return nil
 }
-func (s *ClientMessageHandlers) SetHandleQuery(h HandleQuery) {
+
+func (s *ClientMessageHandlers) AddHandleBind(h HandleBind) {
 	if h == nil {
 		return
 	}
-	(*s)['Q'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
-		return h(ctx, message.ReadQuery(raw))
-	}
+	s.handleBind = append(s.handleBind, h)
 }
-func (s *ClientMessageHandlers) SetHandleSync(h HandleSync) {
+func (s *ClientMessageHandlers) AddHandleClose(h HandleClose) {
 	if h == nil {
 		return
 	}
-	(*s)['S'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
-		return h(ctx, message.ReadSync(raw))
-	}
+	s.handleClose = append(s.handleClose, h)
 }
-func (s *ClientMessageHandlers) SetHandleTerminate(h HandleTerminate) {
+func (s *ClientMessageHandlers) AddHandleCopyFail(h HandleCopyFail) {
 	if h == nil {
 		return
 	}
-	(*s)['X'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
-		return h(ctx, message.ReadTerminate(raw))
-	}
+	s.handleCopyFail = append(s.handleCopyFail, h)
 }
-func (s *ClientMessageHandlers) SetHandleCopyData(h HandleCopyData) {
+func (s *ClientMessageHandlers) AddHandleDescribe(h HandleDescribe) {
 	if h == nil {
 		return
 	}
-	(*s)['d'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
-		return h(ctx, message.ReadCopyData(raw))
-	}
+	s.handleDescribe = append(s.handleDescribe, h)
 }
-func (s *ClientMessageHandlers) SetHandleCopyDone(h HandleCopyDone) {
+func (s *ClientMessageHandlers) AddHandleExecute(h HandleExecute) {
 	if h == nil {
 		return
 	}
-	(*s)['c'] = func(ctx *Metadata, raw []byte) (message.Reader, error) {
-		return h(ctx, message.ReadCopyDone(raw))
+	s.handleExecute = append(s.handleExecute, h)
+}
+func (s *ClientMessageHandlers) AddHandleFlush(h HandleFlush) {
+	if h == nil {
+		return
 	}
+	s.handleFlush = append(s.handleFlush, h)
+}
+func (s *ClientMessageHandlers) AddHandleFunctionCall(h HandleFunctionCall) {
+	if h == nil {
+		return
+	}
+	s.handleFunctionCall = append(s.handleFunctionCall, h)
+}
+func (s *ClientMessageHandlers) AddHandleParse(h HandleParse) {
+	if h == nil {
+		return
+	}
+	s.handleParse = append(s.handleParse, h)
+}
+func (s *ClientMessageHandlers) AddHandleQuery(h HandleQuery) {
+	if h == nil {
+		return
+	}
+	s.handleQuery = append(s.handleQuery, h)
+}
+func (s *ClientMessageHandlers) AddHandleSync(h HandleSync) {
+	if h == nil {
+		return
+	}
+	s.handleSync = append(s.handleSync, h)
+}
+func (s *ClientMessageHandlers) AddHandleTerminate(h HandleTerminate) {
+	if h == nil {
+		return
+	}
+	s.handleTerminate = append(s.handleTerminate, h)
+}
+func (s *ClientMessageHandlers) AddHandleCopyData(h HandleCopyData) {
+	if h == nil {
+		return
+	}
+	s.handleCopyData = append(s.handleCopyData, h)
+}
+func (s *ClientMessageHandlers) AddHandleCopyDone(h HandleCopyDone) {
+	if h == nil {
+		return
+	}
+	s.handleCopyDone = append(s.handleCopyDone, h)
+}
+func (s *ClientMessageHandlers) AddHandleSASLInitialResponse(h HandleSASLInitialResponse) {
+	if h == nil {
+		return
+	}
+	s.handleSASLInitialResponse = append(s.handleSASLInitialResponse, h)
+}
+func (s *ClientMessageHandlers) AddHandleSASLResponse(h HandleSASLResponse) {
+	if h == nil {
+		return
+	}
+	s.handleSASLResponse = append(s.handleSASLResponse, h)
+}
+func (s *ClientMessageHandlers) AddHandleGSSResponse(h HandleGSSResponse) {
+	if h == nil {
+		return
+	}
+	s.handleGSSResponse = append(s.handleGSSResponse, h)
+}
+func (s *ClientMessageHandlers) AddHandlePasswordMessage(h HandlePasswordMessage) {
+	if h == nil {
+		return
+	}
+	s.handlePasswordMessage = append(s.handlePasswordMessage, h)
 }
