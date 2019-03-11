@@ -1,0 +1,33 @@
+version: "3.4"
+
+services:
+  build:
+    image: golang:1.11.5
+    command: ["bash", "-c", "cd /app/example && go build main.go"]
+    volumes:
+      - .:/app
+
+  example:
+    image: pgbroker-example:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.example
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:11-alpine
+
+  pgbench:
+    image: postgres:11-alpine
+    command: ["bash", "-c", "
+      pgbench -i -s 5 -h example -U postgres && \
+      echo && \
+      pgbench -M simple -h example -U postgres && \
+      echo && \
+      pgbench -M extended -h example -U postgres && \
+      echo && \
+      pgbench -M prepared -h example -U postgres
+    "]
+    depends_on:
+      - example

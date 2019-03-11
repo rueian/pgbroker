@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	ln, err := net.Listen("tcp", ":54322")
+	ln, err := net.Listen("tcp", ":5432")
 	if err != nil {
 		panic(err)
 	}
@@ -44,7 +44,7 @@ func main() {
 	})
 
 	server := proxy.Server{
-		PGResolver:            backend.NewStaticPGResolver(":5432"),
+		PGResolver:            backend.NewStaticPGResolver("postgres:5432"),
 		ConnInfoStore:         backend.NewInMemoryConnInfoStore(),
 		ServerMessageHandlers: serverMessageHandlers,
 		ClientMessageHandlers: clientMessageHandlers,
