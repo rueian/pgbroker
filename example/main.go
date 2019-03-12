@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/signal"
+	"runtime"
+	"runtime/pprof"
 	"syscall"
 
 	"github.com/rueian/pgbroker/backend"
@@ -13,6 +16,17 @@ import (
 )
 
 func main() {
+	{
+		f, err := os.Create("/pprof/cpu.prof")
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+
 	ln, err := net.Listen("tcp", ":5432")
 	if err != nil {
 		panic(err)
@@ -56,4 +70,16 @@ func main() {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	<-sigs
 	server.Shutdown()
+
+	{
+		f, err := os.Create("/pprof/mem.prof")
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		defer f.Close()
+		runtime.GC() // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
+		}
+	}
 }

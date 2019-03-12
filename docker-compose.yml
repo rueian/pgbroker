@@ -14,6 +14,8 @@ services:
       dockerfile: Dockerfile.example
     depends_on:
       - postgres
+    volumes:
+      - .:/pprof
 
   postgres:
     image: postgres:11-alpine
@@ -23,11 +25,11 @@ services:
     command: ["bash", "-c", "
       pgbench -i -s 5 -h example -U postgres && \
       echo && \
-      pgbench -M simple -h example -U postgres && \
+      pgbench -T 10 -M simple -h example -U postgres && \
       echo && \
-      pgbench -M extended -h example -U postgres && \
+      pgbench -T 10 -M extended -h example -U postgres && \
       echo && \
-      pgbench -M prepared -h example -U postgres
+      pgbench -T 10 -M prepared -h example -U postgres
     "]
     depends_on:
       - example
