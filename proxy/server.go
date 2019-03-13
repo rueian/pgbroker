@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/binary"
@@ -131,14 +132,21 @@ func (s *Server) handleConn(client net.Conn) (err error) {
 	var wait chan error
 
 	select {
-	case <-clientCh:
+	case err = <-clientCh:
 		wait = serverCh
-	case <-serverCh:
+	case err = <-serverCh:
 		wait = clientCh
+	}
+
+	if err != nil && err != io.EOF {
+		// TODO: log err
 	}
 
 	select {
 	case err = <-wait:
+		if err != nil && err != io.EOF {
+			// TODO: log err
+		}
 	case <-time.Tick(10 * time.Second):
 	}
 
@@ -163,38 +171,29 @@ func (s *Server) readStartupMessage(client io.Reader) (message.Reader, error) {
 	return m, nil
 }
 
-func (s *Server) processMessages(ctx *Metadata, in io.Reader, out io.Writer, hg MessageHandlerRegister) error {
-	for !s.stop {
-		c := container{}
+func (s *Server) processMessages(ctx *Metadata, r io.Reader, w io.Writer, hg MessageHandlerRegister) (err error) {
+	rb := newMsgBuffer(r, 4096)
+	wb := bufio.NewWriter(w)
 
-		c.head = make([]byte, MessageTypeLength+MessageSizeLength)
-		if _, err := io.ReadFull(in, c.head); err != nil {
+	var ms []byte
+	for !s.stop {
+		ms, err = rb.ReadMessage()
+		if err != nil {
 			return err
 		}
-
-		if handler := hg.GetHandler(c.GetType()); handler != nil {
-			c.data = make([]byte, c.GetSize()-MessageSizeLength)
-			if _, err := io.ReadFull(in, c.data); err != nil {
-				return err
-			}
-
-			if msg, err := handler(ctx, c.data); err != nil {
-				if _, err := io.Copy(out, c.Reader()); err != nil {
-					return err
-				}
-			} else {
-				if _, err := io.Copy(out, msg.Reader()); err != nil {
-					return err
-				}
+		if handler := hg.GetHandler(ms[0]); handler != nil {
+			var msg message.Reader
+			if msg, err = handler(ctx, ms[5:]); err == nil {
+				_, err = io.Copy(wb, msg.Reader())
 			}
 		} else {
-			c.data = make([]byte, 0)
-			if _, err := io.Copy(out, c.Reader()); err != nil {
-				return err
-			}
-			if _, err := io.CopyN(out, in, int64(c.GetSize()-MessageSizeLength)); err != nil {
-				return err
-			}
+			_, err = io.Copy(wb, bytes.NewReader(ms))
+		}
+		if err != nil {
+			return err
+		}
+		if rb.End() {
+			wb.Flush()
 		}
 	}
 	return nil
@@ -215,4 +214,78 @@ func (c container) GetType() byte {
 
 func (c container) GetSize() uint32 {
 	return binary.BigEndian.Uint32(c.head[len(c.head)-4:])
+}
+
+type msgBuffer struct {
+	buf []byte
+	rs  int
+	we  int
+	r   io.Reader
+}
+
+func (b *msgBuffer) End() bool {
+	return b.we == b.rs
+}
+
+func (b *msgBuffer) ReadMessage() (msg []byte, err error) {
+	var n int
+
+	// ensure there is a message header in the buf
+	for b.we-b.rs < 5 {
+		if b.we == len(b.buf) {
+			// need to move msg to the beginning
+			copy(b.buf, b.buf[b.rs:])
+			b.we = b.we - b.rs
+			b.rs = 0
+		}
+
+		n, err = b.r.Read(b.buf[b.we:])
+		if err != nil {
+			return
+		}
+		b.we += n
+	}
+
+	msgLen := int(binary.BigEndian.Uint32(b.buf[b.rs+1:b.rs+5])) + 1
+
+	if msgLen > len(b.buf) {
+		// need large buf
+		buf := make([]byte, msgLen)
+		copy(buf, b.buf[b.rs:b.we])
+		b.buf = buf
+		b.we = b.we - b.rs
+		b.rs = 0
+	}
+
+	msgEnd := b.rs + msgLen
+
+	if msgEnd > len(b.buf) {
+		// need to move msg to the beginning
+		copy(b.buf, b.buf[b.rs:b.we])
+		b.we = b.we - b.rs
+		b.rs = 0
+		msgEnd = b.rs + msgLen
+	}
+
+	// ensure the full message is in the buf
+	for b.we < msgEnd {
+		n, err = b.r.Read(b.buf[b.we:])
+		if err != nil {
+			return
+		}
+		b.we += n
+	}
+
+	msg = b.buf[b.rs:msgEnd]
+	b.rs = msgEnd
+	// no remaining message in the buffer, we can use full buffer next time
+	if b.we == b.rs {
+		b.we = 0
+		b.rs = 0
+	}
+	return
+}
+
+func newMsgBuffer(r io.Reader, size int) *msgBuffer {
+	return &msgBuffer{buf: make([]byte, size), r: r}
 }
