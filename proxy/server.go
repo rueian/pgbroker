@@ -15,8 +15,6 @@ import (
 )
 
 const (
-	MessageTypeLength     = 1
-	MessageSizeLength     = 4
 	InitMessageSizeLength = 4
 )
 
@@ -154,19 +152,17 @@ func (s *Server) handleConn(client net.Conn) (err error) {
 }
 
 func (s *Server) readStartupMessage(client io.Reader) (message.Reader, error) {
-	c := container{}
-
-	c.head = make([]byte, InitMessageSizeLength)
-	if _, err := io.ReadFull(client, c.head); err != nil {
-		return c, err
+	head := make([]byte, InitMessageSizeLength)
+	if _, err := io.ReadFull(client, head); err != nil {
+		return nil, err
 	}
 
-	c.data = make([]byte, c.GetSize()-InitMessageSizeLength)
-	if _, err := io.ReadFull(client, c.data); err != nil {
-		return c, err
+	data := make([]byte, binary.BigEndian.Uint32(head)-InitMessageSizeLength)
+	if _, err := io.ReadFull(client, data); err != nil {
+		return nil, err
 	}
 
-	m := message.ReadStartupMessage(c.data)
+	m := message.ReadStartupMessage(data)
 
 	return m, nil
 }
@@ -197,23 +193,6 @@ func (s *Server) processMessages(ctx *Metadata, r io.Reader, w io.Writer, hg Mes
 		}
 	}
 	return nil
-}
-
-type container struct {
-	head []byte
-	data []byte
-}
-
-func (c container) Reader() io.Reader {
-	return io.MultiReader(bytes.NewReader(c.head), bytes.NewReader(c.data))
-}
-
-func (c container) GetType() byte {
-	return c.head[0]
-}
-
-func (c container) GetSize() uint32 {
-	return binary.BigEndian.Uint32(c.head[len(c.head)-4:])
 }
 
 type msgBuffer struct {
