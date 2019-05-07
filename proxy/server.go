@@ -23,6 +23,7 @@ type Server struct {
 	ConnInfoStore         backend.ConnInfoStore
 	ClientMessageHandlers *ClientMessageHandlers
 	ServerMessageHandlers *ServerMessageHandlers
+	OnHandleConnError     func(err error, ctx *Metadata, conn net.Conn)
 
 	stop bool
 	wg   sync.WaitGroup
@@ -41,8 +42,15 @@ func (s *Server) Serve(ln net.Listener) error {
 			s.wg.Add(1)
 			defer s.wg.Done()
 			defer conn.Close()
-			if err := s.handleConn(conn); err != nil {
-				// TODO: log error
+
+			ctx := &Metadata{
+				Context:   context.Background(),
+				AuthPhase: PhaseStartup,
+			}
+			if err := s.handleConn(ctx, conn); err != nil {
+				if s.OnHandleConnError != nil {
+					s.OnHandleConnError(err, ctx, conn)
+				}
 			}
 		}()
 	}
@@ -54,7 +62,7 @@ func (s *Server) Shutdown() {
 	s.wg.Wait()
 }
 
-func (s *Server) handleConn(client net.Conn) (err error) {
+func (s *Server) handleConn(ctx *Metadata, client net.Conn) (err error) {
 	s.ServerMessageHandlers.AddHandleBackendKeyData(func(ctx *Metadata, msg *message.BackendKeyData) (data *message.BackendKeyData, e error) {
 		ctx.ConnInfo.BackendProcessID = msg.ProcessID
 		ctx.ConnInfo.BackendSecretKey = msg.SecretKey
@@ -63,11 +71,6 @@ func (s *Server) handleConn(client net.Conn) (err error) {
 		}
 		return msg, nil
 	})
-
-	ctx := &Metadata{
-		Context:   context.Background(),
-		AuthPhase: PhaseStartup,
-	}
 
 	var server net.Conn
 	var startup message.Reader
