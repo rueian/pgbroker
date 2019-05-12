@@ -3,6 +3,7 @@ package backend
 import (
 	"net"
 	"strconv"
+	"sync"
 )
 
 type ConnInfo struct {
@@ -20,26 +21,28 @@ type ConnInfoStore interface {
 }
 
 type InMemoryConnInfoStore struct {
-	store map[string]*ConnInfo
+	store sync.Map
 }
 
 func (s *InMemoryConnInfoStore) Find(clientAddress net.Addr, backendProcessID, backendSecretKey uint32) (*ConnInfo, error) {
 	key := s.key(backendProcessID, backendSecretKey)
-	if c, ok := s.store[key]; ok {
-		return c, nil
+	if v, ok := s.store.Load(key); ok {
+		if v, ok := v.(*ConnInfo); ok {
+			return v, nil
+		}
 	}
 	return nil, nil
 }
 
 func (s *InMemoryConnInfoStore) Save(i *ConnInfo) error {
 	key := s.key(i.BackendProcessID, i.BackendSecretKey)
-	s.store[key] = i
+	s.store.Store(key, i)
 	return nil
 }
 
 func (s *InMemoryConnInfoStore) Delete(i *ConnInfo) error {
 	key := s.key(i.BackendProcessID, i.BackendSecretKey)
-	delete(s.store, key)
+	s.store.Delete(key)
 	return nil
 }
 
@@ -48,5 +51,5 @@ func (s *InMemoryConnInfoStore) key(processID, secretKey uint32) string {
 }
 
 func NewInMemoryConnInfoStore() *InMemoryConnInfoStore {
-	return &InMemoryConnInfoStore{store: make(map[string]*ConnInfo)}
+	return &InMemoryConnInfoStore{}
 }
