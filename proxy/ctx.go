@@ -22,4 +22,5 @@ type Ctx struct {
 	RowDescription *message.RowDescription
 	AuthPhase      AuthPhase
 	Context        context.Context
+	Cancel         context.CancelFunc
 }

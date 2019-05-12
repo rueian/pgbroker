@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"errors"
 	"io"
 	"net"
 	"sync"
@@ -43,8 +44,10 @@ func (s *Server) Serve(ln net.Listener) error {
 			defer s.wg.Done()
 			defer conn.Close()
 
+			c, f := context.WithCancel(context.Background())
 			ctx := &Ctx{
-				Context:   context.Background(),
+				Context:   c,
+				Cancel:    f,
 				AuthPhase: PhaseStartup,
 			}
 			if err := s.handleConn(ctx, conn); err != nil {
@@ -91,7 +94,7 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 				}
 			}
 			if err != nil {
-				// TODO: log error
+				io.Copy(client, errorResp("ERROR", "08006", err.Error()).Reader())
 			}
 			return err
 		}
@@ -101,16 +104,33 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 			continue
 		}
 		if m, ok := startup.(*message.StartupMessage); ok {
+			resolved := make(chan bool)
+			checking := make(chan error, 1)
+			go func() {
+				defer close(checking)
+				if err := isConnReadable(resolved, client); err != nil {
+					checking <- err
+					ctx.Cancel()
+				}
+			}()
 
-			server, err = s.PGResolver.GetPGConn(client.RemoteAddr(), m.Parameters)
+			server, err = s.PGResolver.GetPGConn(ctx.Context, client.RemoteAddr(), m.Parameters)
+			close(resolved)
+
 			if err != nil {
-				// TODO: write postgres error to client
+				select {
+				case err = <-checking:
+				default:
+				}
+				io.Copy(client, errorResp("ERROR", "08006", err.Error()).Reader())
 				return err
 			}
 
 			ctx.ConnInfo.ClientAddress = client.RemoteAddr()
 			ctx.ConnInfo.ServerAddress = server.RemoteAddr()
 			ctx.ConnInfo.StartupParameters = m.Parameters
+
+			<-checking
 			break
 		}
 	}
@@ -275,4 +295,46 @@ func (b *msgBuffer) ReadMessage() (msg []byte, err error) {
 
 func newMsgBuffer(r io.Reader, size int) *msgBuffer {
 	return &msgBuffer{buf: make([]byte, size), r: r}
+}
+
+func errorResp(s, c, m string) *message.ErrorResponse {
+	return &message.ErrorResponse{
+		Fields: []message.ErrorField{
+			{
+				Type:  byte('S'),
+				Value: s,
+			},
+			{
+				Type:  byte('C'),
+				Value: c,
+			},
+			{
+				Type:  byte('M'),
+				Value: m,
+			},
+		},
+	}
+}
+
+func isConnReadable(stop <-chan bool, conn net.Conn) error {
+	defer conn.SetReadDeadline(time.Time{})
+	buf := make([]byte, 1)
+	for {
+		select {
+		case <-stop:
+			return nil
+		case <-time.Tick(1 * time.Second):
+			if err := conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond)); err != nil {
+				return err
+			}
+			if n, err := conn.Read(buf); err != nil {
+				if e, ok := err.(*net.OpError); ok && e.Timeout() {
+					continue
+				}
+				return err
+			} else if n > 0 {
+				return errors.New("unexpected message from client during startup")
+			}
+		}
+	}
 }

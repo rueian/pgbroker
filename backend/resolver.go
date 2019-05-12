@@ -1,18 +1,19 @@
 package backend
 
 import (
+	"context"
 	"net"
 )
 
 type PGResolver interface {
-	GetPGConn(clientAddr net.Addr, parameters map[string]string) (net.Conn, error)
+	GetPGConn(ctx context.Context, clientAddr net.Addr, parameters map[string]string) (net.Conn, error)
 }
 
 type StaticPGResolver struct {
 	Address string
 }
 
-func (r *StaticPGResolver) GetPGConn(clientAddr net.Addr, parameters map[string]string) (net.Conn, error) {
+func (r *StaticPGResolver) GetPGConn(ctx context.Context, clientAddr net.Addr, parameters map[string]string) (net.Conn, error) {
 	return net.Dial("tcp", r.Address)
 }
 
