@@ -26,9 +26,9 @@ type Server struct {
 	ServerMessageHandlers *ServerMessageHandlers
 	OnHandleConnError     func(err error, ctx *Ctx, conn net.Conn)
 
-	stop bool
-	wg   sync.WaitGroup
-	ln   net.Listener
+	wg      sync.WaitGroup
+	ln      net.Listener
+	clients sync.Map
 }
 
 func (s *Server) Serve(ln net.Listener) error {
@@ -38,11 +38,13 @@ func (s *Server) Serve(ln net.Listener) error {
 		if err != nil {
 			return err
 		}
+		s.clients.Store(conn.LocalAddr().String(), conn)
 
 		go func() {
 			s.wg.Add(1)
 			defer s.wg.Done()
 			defer conn.Close()
+			defer s.clients.Delete(conn.LocalAddr().String())
 
 			c, f := context.WithCancel(context.Background())
 			ctx := &Ctx{
@@ -60,11 +62,13 @@ func (s *Server) Serve(ln net.Listener) error {
 }
 
 func (s *Server) Shutdown() {
-	s.stop = true
 	s.ln.Close()
-	// close client read channel immediately
-	// check if server read channel is processing
-	// otherwise this wait will never be completed
+	s.clients.Range(func(key, value interface{}) bool {
+		if conn, ok := value.(*net.TCPConn); ok {
+			conn.CloseRead()
+		}
+		return true
+	})
 	s.wg.Wait()
 }
 
@@ -155,28 +159,20 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 		serverCh <- s.processMessages(ctx, server, client, s.ServerMessageHandlers)
 	}()
 
-	var wait chan error
-
 	select {
-	case err = <-clientCh:
-		wait = serverCh
 	case err = <-serverCh:
-		wait = clientCh
-	}
-
-	if err != nil && err != io.EOF {
-		// TODO: log err
-	}
-
-	select {
-	case err = <-wait:
 		if err != nil && err != io.EOF {
-			// TODO: log err
+			io.Copy(client, errorResp("ERROR", "08006", err.Error()).Reader())
 		}
-	case <-time.Tick(10 * time.Second):
+		return err
+	case err = <-clientCh:
+		select {
+		case err = <-serverCh:
+			return err
+		case <-time.Tick(10 * time.Second):
+			return errors.New("proxy shutdown timeout")
+		}
 	}
-
-	return err
 }
 
 func (s *Server) readStartupMessage(client io.Reader) (message.Reader, error) {
@@ -200,7 +196,7 @@ func (s *Server) processMessages(ctx *Ctx, r io.Reader, w io.Writer, hg MessageH
 	wb := bufio.NewWriter(w)
 
 	var ms []byte
-	for !s.stop {
+	for {
 		ms, err = rb.ReadMessage()
 		if err != nil {
 			return err
