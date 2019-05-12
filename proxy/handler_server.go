@@ -6,38 +6,38 @@ import (
 	"github.com/rueian/pgbroker/message"
 )
 
-type HandleAuthenticationOk func(ms *Metadata, msg *message.AuthenticationOk) (*message.AuthenticationOk, error)
-type HandleAuthenticationKerberosV5 func(ms *Metadata, msg *message.AuthenticationKerberosV5) (*message.AuthenticationKerberosV5, error)
-type HandleAuthenticationCleartextPassword func(ms *Metadata, msg *message.AuthenticationCleartextPassword) (*message.AuthenticationCleartextPassword, error)
-type HandleAuthenticationMD5Password func(ms *Metadata, msg *message.AuthenticationMD5Password) (*message.AuthenticationMD5Password, error)
-type HandleAuthenticationSCMCredential func(ms *Metadata, msg *message.AuthenticationSCMCredential) (*message.AuthenticationSCMCredential, error)
-type HandleAuthenticationGSS func(ms *Metadata, msg *message.AuthenticationGSS) (*message.AuthenticationGSS, error)
-type HandleAuthenticationSSPI func(ms *Metadata, msg *message.AuthenticationSSPI) (*message.AuthenticationSSPI, error)
-type HandleAuthenticationGSSContinue func(ms *Metadata, msg *message.AuthenticationGSSContinue) (*message.AuthenticationGSSContinue, error)
-type HandleAuthenticationSASL func(ms *Metadata, msg *message.AuthenticationSASL) (*message.AuthenticationSASL, error)
-type HandleAuthenticationSASLContinue func(ms *Metadata, msg *message.AuthenticationSASLContinue) (*message.AuthenticationSASLContinue, error)
-type HandleAuthenticationSASLFinal func(ms *Metadata, msg *message.AuthenticationSASLFinal) (*message.AuthenticationSASLFinal, error)
-type HandleBackendKeyData func(ms *Metadata, msg *message.BackendKeyData) (*message.BackendKeyData, error)
-type HandleBindComplete func(ms *Metadata, msg *message.BindComplete) (*message.BindComplete, error)
-type HandleCloseComplete func(ms *Metadata, msg *message.CloseComplete) (*message.CloseComplete, error)
-type HandleCommandComplete func(ms *Metadata, msg *message.CommandComplete) (*message.CommandComplete, error)
-type HandleCopyInResponse func(ms *Metadata, msg *message.CopyInResponse) (*message.CopyInResponse, error)
-type HandleCopyOutResponse func(ms *Metadata, msg *message.CopyOutResponse) (*message.CopyOutResponse, error)
-type HandleCopyBothResponse func(ms *Metadata, msg *message.CopyBothResponse) (*message.CopyBothResponse, error)
-type HandleDataRow func(ms *Metadata, msg *message.DataRow) (*message.DataRow, error)
-type HandleEmptyQueryResponse func(ms *Metadata, msg *message.EmptyQueryResponse) (*message.EmptyQueryResponse, error)
-type HandleErrorResponse func(ms *Metadata, msg *message.ErrorResponse) (*message.ErrorResponse, error)
-type HandleFunctionCallResponse func(ms *Metadata, msg *message.FunctionCallResponse) (*message.FunctionCallResponse, error)
-type HandleNegotiateProtocolVersion func(ms *Metadata, msg *message.NegotiateProtocolVersion) (*message.NegotiateProtocolVersion, error)
-type HandleNoData func(ms *Metadata, msg *message.NoData) (*message.NoData, error)
-type HandleNoticeResponse func(ms *Metadata, msg *message.NoticeResponse) (*message.NoticeResponse, error)
-type HandleNotificationResponse func(ms *Metadata, msg *message.NotificationResponse) (*message.NotificationResponse, error)
-type HandleParameterDescription func(ms *Metadata, msg *message.ParameterDescription) (*message.ParameterDescription, error)
-type HandleParameterStatus func(ms *Metadata, msg *message.ParameterStatus) (*message.ParameterStatus, error)
-type HandleParseComplete func(ms *Metadata, msg *message.ParseComplete) (*message.ParseComplete, error)
-type HandlePortalSuspended func(ms *Metadata, msg *message.PortalSuspended) (*message.PortalSuspended, error)
-type HandleReadyForQuery func(ms *Metadata, msg *message.ReadyForQuery) (*message.ReadyForQuery, error)
-type HandleRowDescription func(ms *Metadata, msg *message.RowDescription) (*message.RowDescription, error)
+type HandleAuthenticationOk func(ms *Ctx, msg *message.AuthenticationOk) (*message.AuthenticationOk, error)
+type HandleAuthenticationKerberosV5 func(ms *Ctx, msg *message.AuthenticationKerberosV5) (*message.AuthenticationKerberosV5, error)
+type HandleAuthenticationCleartextPassword func(ms *Ctx, msg *message.AuthenticationCleartextPassword) (*message.AuthenticationCleartextPassword, error)
+type HandleAuthenticationMD5Password func(ms *Ctx, msg *message.AuthenticationMD5Password) (*message.AuthenticationMD5Password, error)
+type HandleAuthenticationSCMCredential func(ms *Ctx, msg *message.AuthenticationSCMCredential) (*message.AuthenticationSCMCredential, error)
+type HandleAuthenticationGSS func(ms *Ctx, msg *message.AuthenticationGSS) (*message.AuthenticationGSS, error)
+type HandleAuthenticationSSPI func(ms *Ctx, msg *message.AuthenticationSSPI) (*message.AuthenticationSSPI, error)
+type HandleAuthenticationGSSContinue func(ms *Ctx, msg *message.AuthenticationGSSContinue) (*message.AuthenticationGSSContinue, error)
+type HandleAuthenticationSASL func(ms *Ctx, msg *message.AuthenticationSASL) (*message.AuthenticationSASL, error)
+type HandleAuthenticationSASLContinue func(ms *Ctx, msg *message.AuthenticationSASLContinue) (*message.AuthenticationSASLContinue, error)
+type HandleAuthenticationSASLFinal func(ms *Ctx, msg *message.AuthenticationSASLFinal) (*message.AuthenticationSASLFinal, error)
+type HandleBackendKeyData func(ms *Ctx, msg *message.BackendKeyData) (*message.BackendKeyData, error)
+type HandleBindComplete func(ms *Ctx, msg *message.BindComplete) (*message.BindComplete, error)
+type HandleCloseComplete func(ms *Ctx, msg *message.CloseComplete) (*message.CloseComplete, error)
+type HandleCommandComplete func(ms *Ctx, msg *message.CommandComplete) (*message.CommandComplete, error)
+type HandleCopyInResponse func(ms *Ctx, msg *message.CopyInResponse) (*message.CopyInResponse, error)
+type HandleCopyOutResponse func(ms *Ctx, msg *message.CopyOutResponse) (*message.CopyOutResponse, error)
+type HandleCopyBothResponse func(ms *Ctx, msg *message.CopyBothResponse) (*message.CopyBothResponse, error)
+type HandleDataRow func(ms *Ctx, msg *message.DataRow) (*message.DataRow, error)
+type HandleEmptyQueryResponse func(ms *Ctx, msg *message.EmptyQueryResponse) (*message.EmptyQueryResponse, error)
+type HandleErrorResponse func(ms *Ctx, msg *message.ErrorResponse) (*message.ErrorResponse, error)
+type HandleFunctionCallResponse func(ms *Ctx, msg *message.FunctionCallResponse) (*message.FunctionCallResponse, error)
+type HandleNegotiateProtocolVersion func(ms *Ctx, msg *message.NegotiateProtocolVersion) (*message.NegotiateProtocolVersion, error)
+type HandleNoData func(ms *Ctx, msg *message.NoData) (*message.NoData, error)
+type HandleNoticeResponse func(ms *Ctx, msg *message.NoticeResponse) (*message.NoticeResponse, error)
+type HandleNotificationResponse func(ms *Ctx, msg *message.NotificationResponse) (*message.NotificationResponse, error)
+type HandleParameterDescription func(ms *Ctx, msg *message.ParameterDescription) (*message.ParameterDescription, error)
+type HandleParameterStatus func(ms *Ctx, msg *message.ParameterStatus) (*message.ParameterStatus, error)
+type HandleParseComplete func(ms *Ctx, msg *message.ParseComplete) (*message.ParseComplete, error)
+type HandlePortalSuspended func(ms *Ctx, msg *message.PortalSuspended) (*message.PortalSuspended, error)
+type HandleReadyForQuery func(ms *Ctx, msg *message.ReadyForQuery) (*message.ReadyForQuery, error)
+type HandleRowDescription func(ms *Ctx, msg *message.RowDescription) (*message.RowDescription, error)
 
 type ServerMessageHandlers struct {
 	m                                     map[byte]MessageHandler
@@ -87,7 +87,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 	}
 	switch b {
 	case 'R':
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			switch msg := message.ReadAuthentication(raw).(type) {
 			case *message.AuthenticationOk:
@@ -180,7 +180,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadBackendKeyData(raw)
 			for _, h := range s.handleBackendKeyData {
@@ -196,7 +196,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadBindComplete(raw)
 			for _, h := range s.handleBindComplete {
@@ -212,7 +212,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadCloseComplete(raw)
 			for _, h := range s.handleCloseComplete {
@@ -228,7 +228,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadCommandComplete(raw)
 			for _, h := range s.handleCommandComplete {
@@ -244,7 +244,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadCopyInResponse(raw)
 			for _, h := range s.handleCopyInResponse {
@@ -260,7 +260,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadCopyOutResponse(raw)
 			for _, h := range s.handleCopyOutResponse {
@@ -276,7 +276,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadCopyBothResponse(raw)
 			for _, h := range s.handleCopyBothResponse {
@@ -292,7 +292,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadDataRow(raw)
 			for _, h := range s.handleDataRow {
@@ -308,7 +308,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadEmptyQueryResponse(raw)
 			for _, h := range s.handleEmptyQueryResponse {
@@ -324,7 +324,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadErrorResponse(raw)
 			for _, h := range s.handleErrorResponse {
@@ -340,7 +340,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadFunctionCallResponse(raw)
 			for _, h := range s.handleFunctionCallResponse {
@@ -356,7 +356,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadNegotiateProtocolVersion(raw)
 			for _, h := range s.handleNegotiateProtocolVersion {
@@ -372,7 +372,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadNoData(raw)
 			for _, h := range s.handleNoData {
@@ -388,7 +388,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadNoticeResponse(raw)
 			for _, h := range s.handleNoticeResponse {
@@ -404,7 +404,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadNotificationResponse(raw)
 			for _, h := range s.handleNotificationResponse {
@@ -420,7 +420,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadParameterDescription(raw)
 			for _, h := range s.handleParameterDescription {
@@ -436,7 +436,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadParameterStatus(raw)
 			for _, h := range s.handleParameterStatus {
@@ -452,7 +452,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadParseComplete(raw)
 			for _, h := range s.handleParseComplete {
@@ -468,7 +468,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadPortalSuspended(raw)
 			for _, h := range s.handlePortalSuspended {
@@ -484,7 +484,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadReadyForQuery(raw)
 			for _, h := range s.handleReadyForQuery {
@@ -500,7 +500,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadRowDescription(raw)
 			for _, h := range s.handleRowDescription {
@@ -516,7 +516,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadCopyData(raw)
 			for _, h := range s.handleCopyData {
@@ -532,7 +532,7 @@ func (s *ServerMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadCopyDone(raw)
 			for _, h := range s.handleCopyDone {

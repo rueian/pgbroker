@@ -4,23 +4,23 @@ import (
 	"github.com/rueian/pgbroker/message"
 )
 
-type HandleBind func(md *Metadata, msg *message.Bind) (*message.Bind, error)
-type HandleClose func(md *Metadata, msg *message.Close) (*message.Close, error)
-type HandleCopyFail func(md *Metadata, msg *message.CopyFail) (*message.CopyFail, error)
-type HandleDescribe func(md *Metadata, msg *message.Describe) (*message.Describe, error)
-type HandleExecute func(md *Metadata, msg *message.Execute) (*message.Execute, error)
-type HandleFlush func(md *Metadata, msg *message.Flush) (*message.Flush, error)
-type HandleFunctionCall func(md *Metadata, msg *message.FunctionCall) (*message.FunctionCall, error)
-type HandleParse func(md *Metadata, msg *message.Parse) (*message.Parse, error)
-type HandlePasswordMessage func(md *Metadata, msg *message.PasswordMessage) (*message.PasswordMessage, error)
-type HandleGSSResponse func(md *Metadata, msg *message.GSSResponse) (*message.GSSResponse, error)
-type HandleSASLInitialResponse func(md *Metadata, msg *message.SASLInitialResponse) (*message.SASLInitialResponse, error)
-type HandleSASLResponse func(md *Metadata, msg *message.SASLResponse) (*message.SASLResponse, error)
-type HandleQuery func(md *Metadata, msg *message.Query) (*message.Query, error)
-type HandleSync func(md *Metadata, msg *message.Sync) (*message.Sync, error)
-type HandleTerminate func(md *Metadata, msg *message.Terminate) (*message.Terminate, error)
-type HandleCopyData func(md *Metadata, msg *message.CopyData) (*message.CopyData, error)
-type HandleCopyDone func(md *Metadata, msg *message.CopyDone) (*message.CopyDone, error)
+type HandleBind func(md *Ctx, msg *message.Bind) (*message.Bind, error)
+type HandleClose func(md *Ctx, msg *message.Close) (*message.Close, error)
+type HandleCopyFail func(md *Ctx, msg *message.CopyFail) (*message.CopyFail, error)
+type HandleDescribe func(md *Ctx, msg *message.Describe) (*message.Describe, error)
+type HandleExecute func(md *Ctx, msg *message.Execute) (*message.Execute, error)
+type HandleFlush func(md *Ctx, msg *message.Flush) (*message.Flush, error)
+type HandleFunctionCall func(md *Ctx, msg *message.FunctionCall) (*message.FunctionCall, error)
+type HandleParse func(md *Ctx, msg *message.Parse) (*message.Parse, error)
+type HandlePasswordMessage func(md *Ctx, msg *message.PasswordMessage) (*message.PasswordMessage, error)
+type HandleGSSResponse func(md *Ctx, msg *message.GSSResponse) (*message.GSSResponse, error)
+type HandleSASLInitialResponse func(md *Ctx, msg *message.SASLInitialResponse) (*message.SASLInitialResponse, error)
+type HandleSASLResponse func(md *Ctx, msg *message.SASLResponse) (*message.SASLResponse, error)
+type HandleQuery func(md *Ctx, msg *message.Query) (*message.Query, error)
+type HandleSync func(md *Ctx, msg *message.Sync) (*message.Sync, error)
+type HandleTerminate func(md *Ctx, msg *message.Terminate) (*message.Terminate, error)
+type HandleCopyData func(md *Ctx, msg *message.CopyData) (*message.CopyData, error)
+type HandleCopyDone func(md *Ctx, msg *message.CopyDone) (*message.CopyDone, error)
 
 type ClientMessageHandlers struct {
 	m                         map[byte]MessageHandler
@@ -57,7 +57,7 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadBind(raw)
 			for _, h := range s.handleBind {
@@ -73,7 +73,7 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadClose(raw)
 			for _, h := range s.handleClose {
@@ -89,7 +89,7 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadCopyFail(raw)
 			for _, h := range s.handleCopyFail {
@@ -105,7 +105,7 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadDescribe(raw)
 			for _, h := range s.handleDescribe {
@@ -121,7 +121,7 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadExecute(raw)
 			for _, h := range s.handleExecute {
@@ -137,7 +137,7 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadFlush(raw)
 			for _, h := range s.handleFlush {
@@ -153,7 +153,7 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadFunctionCall(raw)
 			for _, h := range s.handleFunctionCall {
@@ -169,7 +169,7 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadParse(raw)
 			for _, h := range s.handleParse {
@@ -185,7 +185,7 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadQuery(raw)
 			for _, h := range s.handleQuery {
@@ -201,7 +201,7 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadSync(raw)
 			for _, h := range s.handleSync {
@@ -217,7 +217,7 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadTerminate(raw)
 			for _, h := range s.handleTerminate {
@@ -233,7 +233,7 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadCopyData(raw)
 			for _, h := range s.handleCopyData {
@@ -249,7 +249,7 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			s.m[b] = nil
 			break
 		}
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			msg := message.ReadCopyDone(raw)
 			for _, h := range s.handleCopyDone {
@@ -261,7 +261,7 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 		}
 		return s.m[b]
 	case 'p':
-		s.m[b] = func(md *Metadata, raw []byte) (message.Reader, error) {
+		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
 			switch md.AuthPhase {
 			case PhaseSASLInit:

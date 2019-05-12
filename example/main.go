@@ -35,15 +35,15 @@ func main() {
 	clientMessageHandlers := proxy.NewClientMessageHandlers()
 	serverMessageHandlers := proxy.NewServerMessageHandlers()
 
-	clientMessageHandlers.AddHandleQuery(func(ctx *proxy.Metadata, msg *message.Query) (query *message.Query, e error) {
+	clientMessageHandlers.AddHandleQuery(func(ctx *proxy.Ctx, msg *message.Query) (query *message.Query, e error) {
 		fmt.Println("Query: ", msg.QueryString)
 		return msg, nil
 	})
-	serverMessageHandlers.AddHandleRowDescription(func(ctx *proxy.Metadata, msg *message.RowDescription) (data *message.RowDescription, e error) {
+	serverMessageHandlers.AddHandleRowDescription(func(ctx *proxy.Ctx, msg *message.RowDescription) (data *message.RowDescription, e error) {
 		ctx.RowDescription = msg
 		return msg, nil
 	})
-	serverMessageHandlers.AddHandleDataRow(func(ctx *proxy.Metadata, msg *message.DataRow) (data *message.DataRow, e error) {
+	serverMessageHandlers.AddHandleDataRow(func(ctx *proxy.Ctx, msg *message.DataRow) (data *message.DataRow, e error) {
 		fmt.Printf("DataDes\t")
 		for _, f := range ctx.RowDescription.Fields {
 			fmt.Printf("%s\t", f.Name)

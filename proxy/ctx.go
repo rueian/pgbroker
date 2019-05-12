@@ -17,7 +17,7 @@ const (
 	PhaseOK
 )
 
-type Metadata struct {
+type Ctx struct {
 	ConnInfo       backend.ConnInfo
 	RowDescription *message.RowDescription
 	AuthPhase      AuthPhase

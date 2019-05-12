@@ -23,7 +23,7 @@ type Server struct {
 	ConnInfoStore         backend.ConnInfoStore
 	ClientMessageHandlers *ClientMessageHandlers
 	ServerMessageHandlers *ServerMessageHandlers
-	OnHandleConnError     func(err error, ctx *Metadata, conn net.Conn)
+	OnHandleConnError     func(err error, ctx *Ctx, conn net.Conn)
 
 	stop bool
 	wg   sync.WaitGroup
@@ -43,7 +43,7 @@ func (s *Server) Serve(ln net.Listener) error {
 			defer s.wg.Done()
 			defer conn.Close()
 
-			ctx := &Metadata{
+			ctx := &Ctx{
 				Context:   context.Background(),
 				AuthPhase: PhaseStartup,
 			}
@@ -59,11 +59,14 @@ func (s *Server) Serve(ln net.Listener) error {
 func (s *Server) Shutdown() {
 	s.stop = true
 	s.ln.Close()
+	// close client read channel immediately
+	// check if server read channel is processing
+	// otherwise this wait will never be completed
 	s.wg.Wait()
 }
 
-func (s *Server) handleConn(ctx *Metadata, client net.Conn) (err error) {
-	s.ServerMessageHandlers.AddHandleBackendKeyData(func(ctx *Metadata, msg *message.BackendKeyData) (data *message.BackendKeyData, e error) {
+func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
+	s.ServerMessageHandlers.AddHandleBackendKeyData(func(ctx *Ctx, msg *message.BackendKeyData) (data *message.BackendKeyData, e error) {
 		ctx.ConnInfo.BackendProcessID = msg.ProcessID
 		ctx.ConnInfo.BackendSecretKey = msg.SecretKey
 		if err := s.ConnInfoStore.Save(&ctx.ConnInfo); err != nil {
@@ -98,8 +101,10 @@ func (s *Server) handleConn(ctx *Metadata, client net.Conn) (err error) {
 			continue
 		}
 		if m, ok := startup.(*message.StartupMessage); ok {
+
 			server, err = s.PGResolver.GetPGConn(client.RemoteAddr(), m.Parameters)
 			if err != nil {
+				// TODO: write postgres error to client
 				return err
 			}
 
@@ -170,7 +175,7 @@ func (s *Server) readStartupMessage(client io.Reader) (message.Reader, error) {
 	return m, nil
 }
 
-func (s *Server) processMessages(ctx *Metadata, r io.Reader, w io.Writer, hg MessageHandlerRegister) (err error) {
+func (s *Server) processMessages(ctx *Ctx, r io.Reader, w io.Writer, hg MessageHandlerRegister) (err error) {
 	rb := newMsgBuffer(r, 4096)
 	wb := bufio.NewWriter(w)
 
