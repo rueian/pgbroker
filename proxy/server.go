@@ -73,6 +73,15 @@ func (s *Server) Shutdown() {
 }
 
 func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
+	if cc, ok := client.(*net.TCPConn); ok {
+		if err := cc.SetKeepAlivePeriod(30 * time.Second); err != nil {
+			return err
+		}
+		if err := cc.SetKeepAlive(true); err != nil {
+			return err
+		}
+	}
+
 	s.ServerMessageHandlers.AddHandleBackendKeyData(func(ctx *Ctx, msg *message.BackendKeyData) (data *message.BackendKeyData, e error) {
 		ctx.ConnInfo.BackendProcessID = msg.ProcessID
 		ctx.ConnInfo.BackendSecretKey = msg.SecretKey
@@ -124,8 +133,10 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 			if err != nil {
 				select {
 				case err = <-checking:
+					err = errors.New("client leave before pg conn resolved: " + err.Error())
 				default:
 				}
+				client.SetWriteDeadline(time.Now().Add(5 * time.Second))
 				io.Copy(client, errorResp("ERROR", "08006", err.Error()).Reader())
 				return err
 			}
@@ -319,7 +330,7 @@ func isConnReadable(stop <-chan bool, conn net.Conn) error {
 		select {
 		case <-stop:
 			return nil
-		case <-time.Tick(1 * time.Second):
+		case <-time.Tick(10 * time.Second):
 			if err := conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond)); err != nil {
 				return err
 			}
