@@ -48,9 +48,10 @@ func (s *Server) Serve(ln net.Listener) error {
 
 			c, f := context.WithCancel(context.Background())
 			ctx := &Ctx{
-				Context:   c,
-				Cancel:    f,
-				AuthPhase: PhaseStartup,
+				ClientConn: conn,
+				Context:    c,
+				Cancel:     f,
+				AuthPhase:  PhaseStartup,
 			}
 			if err := s.handleConn(ctx, conn); err != nil {
 				if s.OnHandleConnError != nil {
@@ -141,6 +142,7 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 				return err
 			}
 
+			ctx.ServerConn = server
 			ctx.ConnInfo.ClientAddress = client.RemoteAddr()
 			ctx.ConnInfo.ServerAddress = server.RemoteAddr()
 			ctx.ConnInfo.StartupParameters = m.Parameters

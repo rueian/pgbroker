@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"context"
+	"net"
 
 	"github.com/rueian/pgbroker/backend"
 	"github.com/rueian/pgbroker/message"
@@ -18,6 +19,8 @@ const (
 )
 
 type Ctx struct {
+	ClientConn     net.Conn
+	ServerConn     net.Conn
 	ConnInfo       backend.ConnInfo
 	RowDescription *message.RowDescription
 	AuthPhase      AuthPhase
