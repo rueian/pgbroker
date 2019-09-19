@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -11,7 +10,6 @@ import (
 	"syscall"
 
 	"github.com/rueian/pgbroker/backend"
-	"github.com/rueian/pgbroker/message"
 	"github.com/rueian/pgbroker/proxy"
 )
 
@@ -32,36 +30,59 @@ func main() {
 		panic(err)
 	}
 
-	clientMessageHandlers := proxy.NewClientMessageHandlers()
-	serverMessageHandlers := proxy.NewServerMessageHandlers()
+	//clientMessageHandlers := proxy.NewClientMessageHandlers()
+	//serverMessageHandlers := proxy.NewServerMessageHandlers()
+	//
+	//clientMessageHandlers.AddHandleQuery(func(ctx *proxy.Ctx, msg *message.Query) (query *message.Query, e error) {
+	//	fmt.Println("Query: ", msg.QueryString)
+	//	return msg, nil
+	//})
+	//serverMessageHandlers.AddHandleRowDescription(func(ctx *proxy.Ctx, msg *message.RowDescription) (data *message.RowDescription, e error) {
+	//	ctx.RowDescription = msg
+	//	return msg, nil
+	//})
+	//serverMessageHandlers.AddHandleDataRow(func(ctx *proxy.Ctx, msg *message.DataRow) (data *message.DataRow, e error) {
+	//	fmt.Printf("DataDes\t")
+	//	for _, f := range ctx.RowDescription.Fields {
+	//		fmt.Printf("%s\t", f.Name)
+	//	}
+	//	fmt.Println("")
+	//	fmt.Printf("DataRow\t")
+	//	for _, f := range msg.ColumnValues {
+	//		fmt.Printf("%s\t", string(f.DataBytes()))
+	//	}
+	//	fmt.Println("")
+	//	return msg, nil
+	//})
 
-	clientMessageHandlers.AddHandleQuery(func(ctx *proxy.Ctx, msg *message.Query) (query *message.Query, e error) {
-		fmt.Println("Query: ", msg.QueryString)
-		return msg, nil
-	})
-	serverMessageHandlers.AddHandleRowDescription(func(ctx *proxy.Ctx, msg *message.RowDescription) (data *message.RowDescription, e error) {
-		ctx.RowDescription = msg
-		return msg, nil
-	})
-	serverMessageHandlers.AddHandleDataRow(func(ctx *proxy.Ctx, msg *message.DataRow) (data *message.DataRow, e error) {
-		fmt.Printf("DataDes\t")
-		for _, f := range ctx.RowDescription.Fields {
-			fmt.Printf("%s\t", f.Name)
-		}
-		fmt.Println("")
-		fmt.Printf("DataRow\t")
-		for _, f := range msg.ColumnValues {
-			fmt.Printf("%s\t", string(f.DataBytes()))
-		}
-		fmt.Println("")
-		return msg, nil
-	})
+	clientStreamHandlers := proxy.NewStreamMessageHandler2()
+	serverStreamHandlers := proxy.NewStreamMessageHandler2()
+
+	//clientStreamHandlers.AddHandler('Q', func(ctx *proxy.Ctx, pi io.Reader, po io.Writer) {
+	//	fmt.Printf("db=%s user=%s query: \n", ctx.ConnInfo.StartupParameters["database"], ctx.ConnInfo.StartupParameters["username"])
+	//	proxy.DefaultStreamHandler(ctx, pi, po)
+	//})
+	//
+	//clientStreamHandlers.AddHandler('P', func(ctx *proxy.Ctx, pi io.Reader, po io.Writer) {
+	//	fmt.Printf("db=%s user=%s query: \n", ctx.ConnInfo.StartupParameters["database"], ctx.ConnInfo.StartupParameters["username"])
+	//	proxy.DefaultStreamHandler(ctx, pi, po)
+	//})
+
+	//serverStreamHandlers.AddHandler('Z', func(ctx *proxy.Ctx, pi io.Reader, po io.Writer) {
+	//	fmt.Printf("server ready for query\n")
+	//	proxy.DefaultStreamHandler(ctx, pi, po)
+	//})
 
 	server := proxy.Server{
-		PGResolver:            backend.NewStaticPGResolver("postgres:5432"),
-		ConnInfoStore:         backend.NewInMemoryConnInfoStore(),
-		ServerMessageHandlers: serverMessageHandlers,
-		ClientMessageHandlers: clientMessageHandlers,
+		PGResolver:           backend.NewStaticPGResolver("postgres:5432"),
+		ConnInfoStore:        backend.NewInMemoryConnInfoStore(),
+		ServerStreamHandlers: serverStreamHandlers,
+		//ServerMessageHandlers: serverMessageHandlers,
+		ClientStreamHandlers: clientStreamHandlers,
+		//ClientMessageHandlers: clientMessageHandlers,
+		OnHandleConnError: func(err error, ctx *proxy.Ctx, conn net.Conn) {
+			fmt.Println("errrr", err)
+		},
 	}
 
 	go server.Serve(ln)
