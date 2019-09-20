@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"sync"
@@ -25,8 +24,8 @@ type Server struct {
 	ConnInfoStore         backend.ConnInfoStore
 	ClientMessageHandlers *ClientMessageHandlers
 	ServerMessageHandlers *ServerMessageHandlers
-	ClientStreamHandlers  *StreamMessageHandlers2
-	ServerStreamHandlers  *StreamMessageHandlers2
+	ClientStreamHandlers  *StreamMessageHandlers
+	ServerStreamHandlers  *StreamMessageHandlers
 	OnHandleConnError     func(err error, ctx *Ctx, conn net.Conn)
 
 	wg      sync.WaitGroup
@@ -96,7 +95,7 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 			return msg, nil
 		})
 	} else {
-		s.ServerStreamHandlers.AddHandler('K', func(ctx *Ctx, pi *sliceChanReader, po *sliceChanWriter) {
+		s.ServerStreamHandlers.AddHandler('K', func(ctx *Ctx, pi *SliceChanReader, po *SliceChanWriter) {
 			for {
 				ss, err := pi.NextSlice()
 				if err != nil {
@@ -189,7 +188,7 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 		if s.ClientMessageHandlers != nil {
 			clientCh <- s.processMessages(ctx, client, server, s.ClientMessageHandlers)
 		} else {
-			clientCh <- s.processStream2(ctx, client, server, s.ClientStreamHandlers)
+			clientCh <- s.processStream(ctx, client, server, s.ClientStreamHandlers)
 		}
 	}()
 
@@ -198,7 +197,7 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 		if s.ServerMessageHandlers != nil {
 			serverCh <- s.processMessages(ctx, server, client, s.ServerMessageHandlers)
 		} else {
-			serverCh <- s.processStream2(ctx, server, client, s.ServerStreamHandlers)
+			serverCh <- s.processStream(ctx, server, client, s.ServerStreamHandlers)
 		}
 	}()
 
@@ -259,32 +258,31 @@ func (s *Server) processMessages(ctx *Ctx, r io.Reader, w io.Writer, hg MessageH
 			wb.Flush()
 		}
 	}
-	return nil
 }
 
-type slice struct {
+type Slice struct {
 	head bool
 	last bool
 	data []byte
 }
 
-type sliceChanReader struct {
-	ch         chan slice
-	header     slice
+type SliceChanReader struct {
+	Chan       chan Slice
+	Head       Slice
 	secondTime bool
 	err        error
 }
 
-func (r *sliceChanReader) NextSlice() (s slice, err error) {
+func (r *SliceChanReader) NextSlice() (s Slice, err error) {
 	if r.err != nil {
-		return slice{}, r.err
+		return Slice{}, r.err
 	}
 
 	if !r.secondTime {
 		r.secondTime = true
-		s = r.header
+		s = r.Head
 	} else {
-		s = <-r.ch
+		s = <-r.Chan
 	}
 
 	if s.last {
@@ -294,13 +292,13 @@ func (r *sliceChanReader) NextSlice() (s slice, err error) {
 	return s, nil
 }
 
-type sliceChanWriter struct {
-	ch         chan slice
+type SliceChanWriter struct {
+	Chan       chan Slice
 	secondTime bool
 	err        error
 }
 
-func (w *sliceChanWriter) Write(s slice) (err error) {
+func (w *SliceChanWriter) Write(s Slice) (err error) {
 	if w.err != nil {
 		return w.err
 	}
@@ -316,28 +314,29 @@ func (w *sliceChanWriter) Write(s slice) (err error) {
 		w.err = io.ErrClosedPipe
 	}
 
-	w.ch <- s
+	w.Chan <- s
 
 	return nil
 }
 
-func (s *Server) processStream2(ctx *Ctx, r io.Reader, w io.Writer, hg StreamHandlerRegister2) (err error) {
+func (s *Server) processStream(ctx *Ctx, r io.Reader, w io.Writer, hg StreamHandlerRegister) (err error) {
 	rb := bufio.NewReader(r)
 	wb := bufio.NewWriter(w)
 	sz := 4096
-	queue := 3
+	queue := 4
 
 	buf := make([]byte, (queue+1)*sz)
 	offset := 0
 
-	stream1 := make(chan slice, queue)
-	defer close(stream1)
+	stream1 := make(chan Slice, queue/2)
+	stream2 := make(chan Slice, queue/2)
 
-	stream2 := make(chan slice, queue)
+	errs := make(chan error, 3)
+	defer close(errs)
 
 	go func() {
 		defer close(stream2)
-
+		var err error
 		for {
 			s, ok := <-stream1
 			if !ok {
@@ -347,160 +346,93 @@ func (s *Server) processStream2(ctx *Ctx, r io.Reader, w io.Writer, hg StreamHan
 			if s.head {
 				msgType := s.data[0]
 				handler := hg.GetHandler(msgType)
-				handler(ctx, &sliceChanReader{
-					ch:     stream1,
-					header: s,
-				}, &sliceChanWriter{
-					ch: stream2,
+				handler(ctx, &SliceChanReader{
+					Chan: stream1,
+					Head: s,
+				}, &SliceChanWriter{
+					Chan: stream2,
 				})
 			} else {
-				fmt.Println("should always be head")
+				err = errors.New("first Slice should always contains message header")
 				break
 			}
 		}
+		errs <- err
 	}()
 
 	go func() {
+		var err error
 		for s := range stream2 {
-			_, err := wb.Write(s.data)
-			// TODO error handle
+			_, err = wb.Write(s.data)
 			if s.last || err != nil {
-				wb.Flush()
+				err = wb.Flush()
 			}
 		}
+		errs <- err
 	}()
 
-	var process = func() error {
-		if offset+5 > len(buf) {
-			offset = 0
-		}
+	go func() {
+		defer close(stream1)
+		var err error
+		var cc int
 
-		header := buf[offset : offset+5] // 1 byte for message type + 4 byte for message length
-
-		if _, err := io.ReadFull(rb, header); err != nil {
-			return err
-		}
-
-		offset += 5
-
-		remaining := int(binary.BigEndian.Uint32(header[1:5])) - 4
-
-		s := slice{
-			head: true,
-			last: remaining == 0,
-			data: header,
-		}
-		stream1 <- s
-
-		for c := 0; c < remaining; {
-			if offset+sz > len(buf) {
+	OuterLoop:
+		for {
+			if offset+5 > len(buf) {
 				offset = 0
 			}
 
-			chunk := buf[offset : offset+min(sz, remaining)]
+			header := buf[offset : offset+5] // 1 byte for message type + 4 byte for message length
 
-			cc, err := io.ReadFull(rb, chunk)
-			if err != nil {
-				return err
+			if _, err = io.ReadFull(rb, header); err != nil {
+				break OuterLoop
 			}
 
-			offset += cc
+			offset += 5
 
-			c = c + cc
-			remaining = remaining - c
+			remaining := int(binary.BigEndian.Uint32(header[1:5])) - 4
 
-			s := slice{
-				head: false,
+			s := Slice{
+				head: true,
 				last: remaining == 0,
-				data: chunk[:cc],
+				data: header,
 			}
 			stream1 <- s
-		}
-		return nil
-	}
 
-	for {
-		if err = process(); err != nil {
-			return err
-		}
-	}
-}
-
-func (s *Server) processStream(ctx *Ctx, r io.Reader, w io.Writer, hg StreamHandlerRegister) (err error) {
-	rb := bufio.NewReader(r)
-	wb := bufio.NewWriter(w)
-	sz := 4096
-
-	var buf = make([]byte, sz)
-
-	var process = func() error {
-		header := buf[:5] // 1 byte for message type + 4 byte for message length
-
-		if _, err := io.ReadFull(rb, header); err != nil {
-			return err
-		}
-
-		if _, err := wb.Write(header); err != nil {
-			fmt.Println("incomplete write")
-			return err
-		}
-
-		remaining := int(binary.BigEndian.Uint32(header[1:5])) - 4
-
-		var pr1, pr2 *io.PipeReader
-		var pw1, pw2 *io.PipeWriter
-
-		handler := hg.GetHandler(buf[0])
-		if handler != nil {
-			pr1, pw1 = io.Pipe()
-			pr2, pw2 = io.Pipe()
-			defer pw1.Close()
-			go handler(ctx, remaining, pr1, pw2)
-
-			go func(remaining int) {
-				defer wb.Flush()
-				defer pr1.Close()
-				defer pw2.Close()
-				defer pr2.Close()
-				for c := 0; c < remaining; {
-					chunk := buf[:min(sz, remaining-c)]
-					// TODO improve error handling
-					cc, _ := io.ReadFull(pr2, chunk)
-					wb.Write(chunk[:cc])
-					c += cc
+			for c := 0; c < remaining; {
+				if offset+sz > len(buf) {
+					offset = 0
 				}
-			}(remaining)
-		} else {
-			defer wb.Flush()
-		}
 
-		for c := 0; c < remaining; {
-			chunk := buf[:min(sz, remaining-c)]
+				chunk := buf[offset : offset+min(sz, remaining)]
 
-			cc, err := io.ReadFull(rb, chunk)
-			if err != nil {
-				return err
+				cc, err = io.ReadFull(rb, chunk)
+				if err != nil {
+					break OuterLoop
+				}
+
+				offset += cc
+
+				c = c + cc
+				remaining = remaining - c
+
+				s := Slice{
+					head: false,
+					last: remaining == 0,
+					data: chunk[:cc],
+				}
+				stream1 <- s
 			}
-
-			if handler != nil {
-				if _, err := pw1.Write(chunk[:cc]); err != nil {
-					return err
-				}
-			} else {
-				if _, err := wb.Write(chunk[:cc]); err != nil {
-					return err
-				}
-			}
-			c += cc
 		}
-		return nil
-	}
+		errs <- err
+	}()
 
-	for {
-		if err = process(); err != nil {
-			return err
+	for i := 0; i < 3; i++ {
+		if e := <-errs; e != nil {
+			err = e
 		}
 	}
+	return err
 }
 
 type msgBuffer struct {

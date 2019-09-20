@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -55,8 +56,8 @@ func main() {
 	//	return msg, nil
 	//})
 
-	clientStreamHandlers := proxy.NewStreamMessageHandler2()
-	serverStreamHandlers := proxy.NewStreamMessageHandler2()
+	clientStreamHandlers := proxy.NewStreamMessageHandler()
+	serverStreamHandlers := proxy.NewStreamMessageHandler()
 
 	//clientStreamHandlers.AddHandler('Q', func(ctx *proxy.Ctx, pi io.Reader, po io.Writer) {
 	//	fmt.Printf("db=%s user=%s query: \n", ctx.ConnInfo.StartupParameters["database"], ctx.ConnInfo.StartupParameters["username"])
