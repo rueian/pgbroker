@@ -56,8 +56,8 @@ func main() {
 	//	return msg, nil
 	//})
 
-	clientStreamHandlers := proxy.NewStreamMessageHandler()
-	serverStreamHandlers := proxy.NewStreamMessageHandler()
+	//clientStreamHandlers := proxy.NewStreamMessageHandler()
+	//serverStreamHandlers := proxy.NewStreamMessageHandler()
 
 	//clientStreamHandlers.AddHandler('Q', func(ctx *proxy.Ctx, pi io.Reader, po io.Writer) {
 	//	fmt.Printf("db=%s user=%s query: \n", ctx.ConnInfo.StartupParameters["database"], ctx.ConnInfo.StartupParameters["username"])
@@ -74,13 +74,18 @@ func main() {
 	//	proxy.DefaultStreamHandler(ctx, pi, po)
 	//})
 
+	clientStreamCallbackFactories := proxy.NewStreamCallbackFactories()
+	serverStreamCallbackFactories := proxy.NewStreamCallbackFactories()
+
 	server := proxy.Server{
-		PGResolver:           backend.NewStaticPGResolver("postgres:5432"),
-		ConnInfoStore:        backend.NewInMemoryConnInfoStore(),
-		ServerStreamHandlers: serverStreamHandlers,
-		//ServerMessageHandlers: serverMessageHandlers,
-		ClientStreamHandlers: clientStreamHandlers,
+		PGResolver:    backend.NewStaticPGResolver("postgres:5432"),
+		ConnInfoStore: backend.NewInMemoryConnInfoStore(),
+		//ClientStreamHandlers: clientStreamHandlers,
+		//ServerStreamHandlers: serverStreamHandlers,
 		//ClientMessageHandlers: clientMessageHandlers,
+		//ServerMessageHandlers: serverMessageHandlers,
+		ClientStreamCallbackFactories: clientStreamCallbackFactories,
+		ServerStreamCallbackFactories: serverStreamCallbackFactories,
 		OnHandleConnError: func(err error, ctx *proxy.Ctx, conn net.Conn) {
 			fmt.Println("errrr", err)
 		},

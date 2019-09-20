@@ -1,5 +1,11 @@
 package proxy
 
+type StreamHandler func(ctx *Ctx, pi *SliceChanReader, po *SliceChanWriter)
+
+type StreamHandlerRegister interface {
+	GetHandler(byte) StreamHandler
+}
+
 func NewStreamMessageHandler() *StreamMessageHandlers {
 	return &StreamMessageHandlers{m: make(map[byte]StreamHandler)}
 }
