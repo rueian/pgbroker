@@ -502,7 +502,6 @@ func (s *Server) processStreamCallback(ctx *Ctx, r io.Reader, w io.Writer, hg *S
 				Data: chunk[:cc],
 			}
 
-			handler := factory(ctx)
 			if _, err = wb.Write(handler(slice).Data); err != nil {
 				return err
 			}
