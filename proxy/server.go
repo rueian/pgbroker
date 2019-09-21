@@ -485,7 +485,7 @@ func (s *Server) processStreamCallback(ctx *Ctx, r io.Reader, w io.Writer, hg *S
 			return err
 		}
 
-		for c := 0; c < remaining; {
+		for remaining > 0 {
 			chunk := buf[:min(sz, remaining)]
 
 			cc, err = io.ReadFull(rb, chunk)
@@ -493,8 +493,7 @@ func (s *Server) processStreamCallback(ctx *Ctx, r io.Reader, w io.Writer, hg *S
 				return err
 			}
 
-			c = c + cc
-			remaining = remaining - c
+			remaining = remaining - cc
 
 			slice = Slice{
 				Head: false,
