@@ -2,7 +2,7 @@ version: "3.4"
 
 services:
   build:
-    image: golang:1.11.5
+    image: golang:1.12
     command: ["bash", "-c", "cd /app/example && go build main.go"]
     volumes:
       - .:/app

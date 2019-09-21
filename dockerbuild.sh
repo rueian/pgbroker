@@ -2,6 +2,7 @@
 
 docker-compose run --rm build
 docker-compose build --force-rm example
-docker-compose run --rm pgbench
+docker-compose up -d
+docker-compose logs -f pgbench
 
 docker-compose down

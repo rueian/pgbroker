@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"net"
@@ -77,6 +78,28 @@ func main() {
 	clientStreamCallbackFactories := proxy.NewStreamCallbackFactories()
 	serverStreamCallbackFactories := proxy.NewStreamCallbackFactories()
 
+	w := bufio.NewWriter(os.Stdout)
+	defer w.Flush()
+
+	clientStreamCallbackFactories.SetFactory('Q', func(ctx *proxy.Ctx) proxy.StreamCallback {
+		return func(slice proxy.Slice) proxy.Slice {
+			if slice.Head {
+				w.Write([]byte(fmt.Sprintf("db=%s query: ", ctx.ConnInfo.StartupParameters["database"])))
+			} else {
+				// check zero byte at the end of data slice. do not write it to stdout.
+				if slice.Data[len(slice.Data)-1] == 0 {
+					w.Write(slice.Data[:len(slice.Data)-1])
+				} else {
+					w.Write(slice.Data)
+				}
+			}
+			if slice.Last {
+				w.Write([]byte("\n"))
+			}
+			return slice
+		}
+	})
+
 	server := proxy.Server{
 		PGResolver:    backend.NewStaticPGResolver("postgres:5432"),
 		ConnInfoStore: backend.NewInMemoryConnInfoStore(),
@@ -87,7 +110,7 @@ func main() {
 		ClientStreamCallbackFactories: clientStreamCallbackFactories,
 		ServerStreamCallbackFactories: serverStreamCallbackFactories,
 		OnHandleConnError: func(err error, ctx *proxy.Ctx, conn net.Conn) {
-			fmt.Println("errrr", err)
+			fmt.Println("OnHandleConnError", err)
 		},
 	}
 
