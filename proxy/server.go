@@ -458,7 +458,7 @@ func (s *Server) processStream(ctx *Ctx, r io.Reader, w io.Writer, hg StreamHand
 func (s *Server) processStreamCallback(ctx *Ctx, r io.Reader, w io.Writer, hg *StreamCallbackFactories) (err error) {
 	rb := bufio.NewReader(r)
 	wb := bufio.NewWriter(w)
-	sz := 4096
+	sz := 4096 * 4
 	cc := 0
 
 	buf := make([]byte, sz)
@@ -507,8 +507,10 @@ func (s *Server) processStreamCallback(ctx *Ctx, r io.Reader, w io.Writer, hg *S
 			}
 		}
 
-		if err = wb.Flush(); err != nil {
-			return err
+		if rb.Buffered() == 0 {
+			if err = wb.Flush(); err != nil {
+				return err
+			}
 		}
 	}
 }
