@@ -1,6 +1,9 @@
 package message
 
-import "io"
+import (
+	"errors"
+	"io"
+)
 
 type StartupMessage struct {
 	ProtocolVersion uint32
@@ -48,18 +51,22 @@ func (m *SSLRequest) Reader() io.Reader {
 	return b.Reader()
 }
 
-func ReadStartupMessage(raw []byte) Reader {
+func ReadStartupMessage(raw []byte) (Reader, error) {
 	b := NewBaseFromBytes(raw)
 	code := b.ReadUint32()
 	if code == 80877103 {
-		return &SSLRequest{RequestCode: code}
+		return &SSLRequest{RequestCode: code}, nil
 	}
 
 	if code == 80877102 {
 		req := &CancelRequest{RequestCode: code}
 		req.ProcessID = b.ReadUint32()
 		req.SecretKey = b.ReadUint32()
-		return req
+		return req, nil
+	}
+
+	if majorVersion := code >> 16; majorVersion < 3 {
+		return nil, errors.New("pg protocol < 3.0 is not supported")
 	}
 
 	startup := &StartupMessage{ProtocolVersion: code, Parameters: make(map[string]string)}
@@ -70,5 +77,5 @@ func ReadStartupMessage(raw []byte) Reader {
 		}
 		startup.Parameters[k] = b.ReadString()
 	}
-	return startup
+	return startup, nil
 }

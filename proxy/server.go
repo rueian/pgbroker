@@ -134,6 +134,7 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 	for {
 		startup, err = s.readStartupMessage(client)
 		if err != nil {
+			io.Copy(client, errorResp("ERROR", "08P01", err.Error()).Reader())
 			return err
 		}
 		if m, ok := startup.(*message.CancelRequest); ok {
@@ -196,6 +197,9 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 		return err
 	}
 
+	// cleanup startup
+	startup = nil
+
 	clientCh := make(chan error)
 	serverCh := make(chan error)
 
@@ -248,9 +252,7 @@ func (s *Server) readStartupMessage(client io.Reader) (message.Reader, error) {
 		return nil, err
 	}
 
-	m := message.ReadStartupMessage(data)
-
-	return m, nil
+	return message.ReadStartupMessage(data)
 }
 
 func (s *Server) processMessages(ctx *Ctx, r io.Reader, w io.Writer, hg MessageHandlerRegister) (err error) {
