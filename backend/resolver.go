@@ -2,11 +2,16 @@ package backend
 
 import (
 	"context"
+	"github.com/rueian/pgbroker/message"
 	"net"
 )
 
 type PGResolver interface {
 	GetPGConn(ctx context.Context, clientAddr net.Addr, parameters map[string]string) (net.Conn, error)
+}
+
+type PGStartupMessageRewriter interface {
+	Rewrite(original *message.StartupMessage) *message.StartupMessage
 }
 
 type StaticPGResolver struct {

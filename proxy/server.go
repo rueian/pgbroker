@@ -21,6 +21,7 @@ const (
 
 type Server struct {
 	PGResolver                    backend.PGResolver
+	PGStartupMessageRewriter      backend.PGStartupMessageRewriter
 	ConnInfoStore                 backend.ConnInfoStore
 	ClientMessageHandlers         *ClientMessageHandlers
 	ServerMessageHandlers         *ServerMessageHandlers
@@ -184,6 +185,10 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 			ctx.ConnInfo.ClientAddress = client.RemoteAddr()
 			ctx.ConnInfo.ServerAddress = server.RemoteAddr()
 			ctx.ConnInfo.StartupParameters = m.Parameters
+
+			if s.PGStartupMessageRewriter != nil {
+				startup = s.PGStartupMessageRewriter.Rewrite(m)
+			}
 
 			<-checking
 			break
