@@ -9,6 +9,10 @@ type PGResolver interface {
 	GetPGConn(ctx context.Context, clientAddr net.Addr, parameters map[string]string) (net.Conn, error)
 }
 
+type PGStartupMessageRewriter interface {
+	RewriteParameters(original map[string]string) map[string]string
+}
+
 type StaticPGResolver struct {
 	Address string
 }
