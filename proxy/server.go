@@ -237,10 +237,12 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 		}
 		return err
 	case err = <-clientCh:
+		timer := time.NewTicker(30 * time.Second)
+		defer timer.Stop()
 		select {
 		case err = <-serverCh:
 			return err
-		case <-time.Tick(10 * time.Second):
+		case <-timer.C:
 			return errors.New("proxy shutdown timeout")
 		}
 	}
@@ -615,13 +617,15 @@ func errorResp(s, c, m string) *message.ErrorResponse {
 }
 
 func isConnReadable(stop <-chan bool, conn net.Conn) error {
+	timer := time.NewTicker(10 * time.Second)
+	defer timer.Stop()
 	defer conn.SetReadDeadline(time.Time{})
 	buf := make([]byte, 1)
 	for {
 		select {
 		case <-stop:
 			return nil
-		case <-time.Tick(10 * time.Second):
+		case <-timer.C:
 			if err := conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond)); err != nil {
 				return err
 			}
