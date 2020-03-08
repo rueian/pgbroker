@@ -25,8 +25,6 @@ type Server struct {
 	ConnInfoStore                 backend.ConnInfoStore
 	ClientMessageHandlers         *ClientMessageHandlers
 	ServerMessageHandlers         *ServerMessageHandlers
-	ClientStreamHandlers          *StreamMessageHandlers
-	ServerStreamHandlers          *StreamMessageHandlers
 	ClientStreamCallbackFactories *StreamCallbackFactories
 	ServerStreamCallbackFactories *StreamCallbackFactories
 	OnHandleConnError             func(err error, ctx *Ctx, conn net.Conn)
@@ -96,23 +94,6 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 				// TODO: log error
 			}
 			return msg, nil
-		})
-	} else if s.ServerStreamHandlers != nil {
-		s.ServerStreamHandlers.AddHandler('K', func(ctx *Ctx, pi *SliceChanReader, po *SliceChanWriter) {
-			for {
-				ss, err := pi.NextSlice()
-				if err != nil {
-					break
-				}
-				po.Write(ss)
-				if !ss.Head {
-					ctx.ConnInfo.BackendProcessID = binary.BigEndian.Uint32(ss.Data[0:4])
-					ctx.ConnInfo.BackendSecretKey = binary.BigEndian.Uint32(ss.Data[4:8])
-					if err := s.ConnInfoStore.Save(&ctx.ConnInfo); err != nil {
-						// TODO: log error
-					}
-				}
-			}
 		})
 	} else if s.ServerStreamCallbackFactories != nil {
 		s.ServerStreamCallbackFactories.SetFactory('K', func(ctx *Ctx) StreamCallback {
@@ -212,9 +193,7 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 		defer close(clientCh)
 		if s.ClientMessageHandlers != nil {
 			clientCh <- s.processMessages(ctx, client, server, s.ClientMessageHandlers)
-		} else if s.ClientStreamHandlers != nil {
-			clientCh <- s.processStream(ctx, client, server, s.ClientStreamHandlers)
-		} else {
+		} else if s.ClientStreamCallbackFactories != nil {
 			clientCh <- s.processStreamCallback(ctx, client, server, s.ClientStreamCallbackFactories)
 		}
 	}()
@@ -223,9 +202,7 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 		defer close(serverCh)
 		if s.ServerMessageHandlers != nil {
 			serverCh <- s.processMessages(ctx, server, client, s.ServerMessageHandlers)
-		} else if s.ServerStreamHandlers != nil {
-			serverCh <- s.processStream(ctx, server, client, s.ServerStreamHandlers)
-		} else {
+		} else if s.ServerStreamCallbackFactories != nil {
 			serverCh <- s.processStreamCallback(ctx, server, client, s.ServerStreamCallbackFactories)
 		}
 	}()
@@ -293,175 +270,6 @@ type Slice struct {
 	Head bool
 	Last bool
 	Data []byte
-}
-
-type SliceChanReader struct {
-	Chan       chan Slice
-	Head       Slice
-	secondTime bool
-	err        error
-}
-
-func (r *SliceChanReader) NextSlice() (s Slice, err error) {
-	if r.err != nil {
-		return Slice{}, r.err
-	}
-
-	if !r.secondTime {
-		r.secondTime = true
-		s = r.Head
-	} else {
-		s = <-r.Chan
-	}
-
-	if s.Last {
-		r.err = io.EOF
-	}
-
-	return s, nil
-}
-
-type SliceChanWriter struct {
-	Chan       chan Slice
-	secondTime bool
-	err        error
-}
-
-func (w *SliceChanWriter) Write(s Slice) (err error) {
-	if w.err != nil {
-		return w.err
-	}
-
-	if !w.secondTime {
-		if !s.Head || len(s.Data) < 5 {
-			return errors.New("first write should contain message header")
-		}
-		w.secondTime = true
-	}
-
-	if s.Last {
-		w.err = io.ErrClosedPipe
-	}
-
-	w.Chan <- s
-
-	return nil
-}
-
-func (s *Server) processStream(ctx *Ctx, r io.Reader, w io.Writer, hg StreamHandlerRegister) (err error) {
-	rb := bufio.NewReader(r)
-	wb := bufio.NewWriter(w)
-	sz := 4096
-	queue := 4
-
-	buf := make([]byte, (queue+1)*sz)
-	offset := 0
-
-	stream1 := make(chan Slice, queue/2)
-	stream2 := make(chan Slice, queue/2)
-
-	errs := make(chan error, 3)
-	defer close(errs)
-
-	go func() {
-		defer close(stream2)
-		var err error
-		for {
-			s, ok := <-stream1
-			if !ok {
-				break
-			}
-
-			if s.Head {
-				msgType := s.Data[0]
-				handler := hg.GetHandler(msgType)
-				handler(ctx, &SliceChanReader{
-					Chan: stream1,
-					Head: s,
-				}, &SliceChanWriter{
-					Chan: stream2,
-				})
-			} else {
-				err = errors.New("first Slice should always contains message header")
-				break
-			}
-		}
-		errs <- err
-	}()
-
-	go func() {
-		var err error
-		for s := range stream2 {
-			_, err = wb.Write(s.Data)
-			if s.Last || err != nil {
-				err = wb.Flush()
-			}
-		}
-		errs <- err
-	}()
-
-	go func() {
-		defer close(stream1)
-		var err error
-		var cc int
-
-	OuterLoop:
-		for {
-			if offset+5 > len(buf) {
-				offset = 0
-			}
-
-			header := buf[offset : offset+5] // 1 byte for message type + 4 byte for message length
-
-			if _, err = io.ReadFull(rb, header); err != nil {
-				break OuterLoop
-			}
-
-			offset += 5
-
-			remaining := int(binary.BigEndian.Uint32(header[1:5])) - 4
-
-			s := Slice{
-				Head: true,
-				Last: remaining == 0,
-				Data: header,
-			}
-			stream1 <- s
-
-			for c := 0; c < remaining; {
-				if offset+sz > len(buf) {
-					offset = 0
-				}
-
-				chunk := buf[offset : offset+min(sz, remaining)]
-
-				cc, err = io.ReadFull(rb, chunk)
-				if err != nil {
-					break OuterLoop
-				}
-
-				offset += cc
-
-				c = c + cc
-				remaining = remaining - c
-
-				s := Slice{
-					Head: false,
-					Last: remaining == 0,
-					Data: chunk[:cc],
-				}
-				stream1 <- s
-			}
-		}
-		errs <- err
-	}()
-
-	for i := 0; i < 3; i++ {
-		if e := <-errs; e != nil {
-			err = e
-		}
-	}
-	return err
 }
 
 func (s *Server) processStreamCallback(ctx *Ctx, r io.Reader, w io.Writer, hg *StreamCallbackFactories) (err error) {
