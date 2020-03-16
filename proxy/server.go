@@ -212,16 +212,13 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 		if err != nil && err != io.EOF {
 			io.Copy(client, errorResp("ERROR", "08006", err.Error()).Reader())
 		}
+		client.Close()
+		<-clientCh
 		return err
 	case err = <-clientCh:
-		timer := time.NewTicker(30 * time.Second)
-		defer timer.Stop()
-		select {
-		case err = <-serverCh:
-			return err
-		case <-timer.C:
-			return errors.New("proxy shutdown timeout")
-		}
+		server.Close()
+		<-serverCh
+		return err
 	}
 }
 
