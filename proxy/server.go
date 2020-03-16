@@ -214,6 +214,8 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 		}
 		return err
 	case err = <-clientCh:
+		server.Close()
+
 		timer := time.NewTicker(30 * time.Second)
 		defer timer.Stop()
 		select {
