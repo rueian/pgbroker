@@ -35,6 +35,29 @@ type Server struct {
 }
 
 func (s *Server) Serve(ln net.Listener) error {
+	if s.ServerMessageHandlers != nil {
+		s.ServerMessageHandlers.AddHandleBackendKeyData(func(ctx *Ctx, msg *message.BackendKeyData) (data *message.BackendKeyData, e error) {
+			ctx.ConnInfo.BackendProcessID = msg.ProcessID
+			ctx.ConnInfo.BackendSecretKey = msg.SecretKey
+			if err := s.ConnInfoStore.Save(&ctx.ConnInfo); err != nil {
+				// TODO: log error
+			}
+			return msg, nil
+		})
+	} else if s.ServerStreamCallbackFactories != nil {
+		s.ServerStreamCallbackFactories.SetFactory('K', func(ctx *Ctx) StreamCallback {
+			return func(slice Slice) Slice {
+				if !slice.Head {
+					ctx.ConnInfo.BackendProcessID = binary.BigEndian.Uint32(slice.Data[0:4])
+					ctx.ConnInfo.BackendSecretKey = binary.BigEndian.Uint32(slice.Data[4:8])
+					if err := s.ConnInfoStore.Save(&ctx.ConnInfo); err != nil {
+						// TODO: log error
+					}
+				}
+				return slice
+			}
+		})
+	}
 	s.ln = ln
 	for {
 		conn, err := ln.Accept()
@@ -84,31 +107,6 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 		if err := cc.SetKeepAlive(true); err != nil {
 			return err
 		}
-	}
-
-	if s.ServerMessageHandlers != nil {
-		s.ServerMessageHandlers.AddHandleBackendKeyData(func(ctx *Ctx, msg *message.BackendKeyData) (data *message.BackendKeyData, e error) {
-			ctx.ConnInfo.BackendProcessID = msg.ProcessID
-			ctx.ConnInfo.BackendSecretKey = msg.SecretKey
-			if err := s.ConnInfoStore.Save(&ctx.ConnInfo); err != nil {
-				// TODO: log error
-			}
-			return msg, nil
-		})
-	} else if s.ServerStreamCallbackFactories != nil {
-		s.ServerStreamCallbackFactories.SetFactory('K', func(ctx *Ctx) StreamCallback {
-			return func(slice Slice) Slice {
-				if !slice.Head {
-					ctx.ConnInfo.BackendProcessID = binary.BigEndian.Uint32(slice.Data[0:4])
-					ctx.ConnInfo.BackendSecretKey = binary.BigEndian.Uint32(slice.Data[4:8])
-					if err := s.ConnInfoStore.Save(&ctx.ConnInfo); err != nil {
-						// TODO: log error
-					}
-				}
-
-				return slice
-			}
-		})
 	}
 
 	var server net.Conn
