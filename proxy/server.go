@@ -151,8 +151,10 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 
 			if err != nil {
 				select {
-				case err = <-checking:
-					err = errors.New("client leave before pg conn resolved: " + err.Error())
+				case err2 := <-checking:
+					if err2 != nil {
+						err = errors.New("client leave before pg conn resolved: " + err2.Error())
+					}
 				default:
 				}
 				client.SetWriteDeadline(time.Now().Add(5 * time.Second))
