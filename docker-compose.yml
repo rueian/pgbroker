@@ -2,7 +2,7 @@ version: "3.4"
 
 services:
   build:
-    image: golang:1.14
+    image: golang:1.16
     command: ["bash", "-c", "cd /app/example && go build main.go"]
     volumes:
       - .:/app
@@ -19,6 +19,8 @@ services:
 
   postgres:
     image: postgres:11-alpine
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
 
   pgbench:
     image: postgres:11-alpine

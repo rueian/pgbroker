@@ -92,6 +92,7 @@ func main() {
 		OnHandleConnError: func(err error, ctx *proxy.Ctx, conn net.Conn) {
 			fmt.Println("OnHandleConnError", err)
 		},
+		Splice: true,
 	}
 
 	go server.Serve(ln)
