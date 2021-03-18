@@ -28,6 +28,7 @@ type Server struct {
 	ClientStreamCallbackFactories *StreamCallbackFactories
 	ServerStreamCallbackFactories *StreamCallbackFactories
 	OnHandleConnError             func(err error, ctx *Ctx, conn net.Conn)
+	Splice                        bool
 
 	wg      sync.WaitGroup
 	ln      net.Listener
@@ -191,19 +192,29 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 
 	go func() {
 		defer close(clientCh)
-		if s.ClientMessageHandlers != nil {
-			clientCh <- s.processMessages(ctx, client, server, s.ClientMessageHandlers)
-		} else if s.ClientStreamCallbackFactories != nil {
-			clientCh <- s.processStreamCallback(ctx, client, server, s.ClientStreamCallbackFactories)
+		if s.Splice {
+			_, err := io.Copy(server, client)
+			clientCh <- err
+		} else {
+			if s.ClientMessageHandlers != nil {
+				clientCh <- s.processMessages(ctx, client, server, s.ClientMessageHandlers)
+			} else if s.ClientStreamCallbackFactories != nil {
+				clientCh <- s.processStreamCallback(ctx, client, server, s.ClientStreamCallbackFactories)
+			}
 		}
 	}()
 
 	go func() {
 		defer close(serverCh)
-		if s.ServerMessageHandlers != nil {
-			serverCh <- s.processMessages(ctx, server, client, s.ServerMessageHandlers)
-		} else if s.ServerStreamCallbackFactories != nil {
-			serverCh <- s.processStreamCallback(ctx, server, client, s.ServerStreamCallbackFactories)
+		if s.Splice {
+			_, err := io.Copy(client, server)
+			serverCh <- err
+		} else {
+			if s.ServerMessageHandlers != nil {
+				serverCh <- s.processMessages(ctx, server, client, s.ServerMessageHandlers)
+			} else if s.ServerStreamCallbackFactories != nil {
+				serverCh <- s.processStreamCallback(ctx, server, client, s.ServerStreamCallbackFactories)
+			}
 		}
 	}()
 
