@@ -1,3 +1,4 @@
 example/main
 *.prof
 *.svg
+.idea/

@@ -1,7 +1,7 @@
 package proxy
 
 import (
-	"github.com/rueian/pgbroker/message"
+	"github.com/pioneerworks/pgbroker/message"
 )
 
 type MessageHandler func(*Ctx, []byte) (message.Reader, error)

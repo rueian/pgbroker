@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rueian/pgbroker/backend"
-	"github.com/rueian/pgbroker/message"
+	"github.com/pioneerworks/pgbroker/backend"
+	"github.com/pioneerworks/pgbroker/message"
 )
 
 const (
