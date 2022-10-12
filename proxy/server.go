@@ -45,6 +45,7 @@ func (s *Server) Serve(ln net.Listener) error {
 			}
 			return msg, nil
 		})
+		s.ServerMessageHandlers.init()
 	} else if s.ServerStreamCallbackFactories != nil {
 		s.ServerStreamCallbackFactories.SetFactory('K', func(ctx *Ctx) StreamCallback {
 			return func(slice Slice) Slice {
@@ -58,6 +59,9 @@ func (s *Server) Serve(ln net.Listener) error {
 				return slice
 			}
 		})
+	}
+	if s.ClientMessageHandlers != nil {
+		s.ClientMessageHandlers.init()
 	}
 	s.ln = ln
 	for {

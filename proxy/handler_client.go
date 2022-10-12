@@ -48,9 +48,16 @@ func NewClientMessageHandlers() *ClientMessageHandlers {
 }
 
 func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
-	if handler, ok := s.m[b]; ok {
-		return handler
+	return s.m[b]
+}
+
+func (s *ClientMessageHandlers) init() {
+	for _, b := range []byte{'B', 'C', 'f', 'D', 'E', 'H', 'F', 'P', 'Q', 'S', 'X', 'd', 'c', 'p'} {
+		s.initHandler(b)
 	}
+}
+
+func (s *ClientMessageHandlers) initHandler(b byte) {
 	switch b {
 	case 'B':
 		if len(s.handleBind) == 0 {
@@ -67,7 +74,6 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			}
 			return msg, err
 		}
-		return s.m[b]
 	case 'C':
 		if len(s.handleClose) == 0 {
 			s.m[b] = nil
@@ -83,7 +89,6 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			}
 			return msg, err
 		}
-		return s.m[b]
 	case 'f':
 		if len(s.handleCopyFail) == 0 {
 			s.m[b] = nil
@@ -99,7 +104,6 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			}
 			return msg, err
 		}
-		return s.m[b]
 	case 'D':
 		if len(s.handleDescribe) == 0 {
 			s.m[b] = nil
@@ -115,7 +119,6 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			}
 			return msg, err
 		}
-		return s.m[b]
 	case 'E':
 		if len(s.handleExecute) == 0 {
 			s.m[b] = nil
@@ -131,7 +134,6 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			}
 			return msg, err
 		}
-		return s.m[b]
 	case 'H':
 		if len(s.handleFlush) == 0 {
 			s.m[b] = nil
@@ -147,7 +149,6 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			}
 			return msg, err
 		}
-		return s.m[b]
 	case 'F':
 		if len(s.handleFunctionCall) == 0 {
 			s.m[b] = nil
@@ -163,7 +164,6 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			}
 			return msg, err
 		}
-		return s.m[b]
 	case 'P':
 		if len(s.handleParse) == 0 {
 			s.m[b] = nil
@@ -179,7 +179,6 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			}
 			return msg, err
 		}
-		return s.m[b]
 	case 'Q':
 		if len(s.handleQuery) == 0 {
 			s.m[b] = nil
@@ -195,7 +194,6 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			}
 			return msg, err
 		}
-		return s.m[b]
 	case 'S':
 		if len(s.handleSync) == 0 {
 			s.m[b] = nil
@@ -211,7 +209,6 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			}
 			return msg, err
 		}
-		return s.m[b]
 	case 'X':
 		if len(s.handleTerminate) == 0 {
 			s.m[b] = nil
@@ -227,7 +224,6 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			}
 			return msg, err
 		}
-		return s.m[b]
 	case 'd':
 		if len(s.handleCopyData) == 0 {
 			s.m[b] = nil
@@ -243,7 +239,6 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			}
 			return msg, err
 		}
-		return s.m[b]
 	case 'c':
 		if len(s.handleCopyDone) == 0 {
 			s.m[b] = nil
@@ -259,7 +254,6 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 			}
 			return msg, err
 		}
-		return s.m[b]
 	case 'p':
 		s.m[b] = func(md *Ctx, raw []byte) (message.Reader, error) {
 			var err error
@@ -298,9 +292,7 @@ func (s *ClientMessageHandlers) GetHandler(b byte) MessageHandler {
 				return msg, err
 			}
 		}
-		return s.m[b]
 	}
-	return nil
 }
 
 func (s *ClientMessageHandlers) AddHandleBind(h HandleBind) {
