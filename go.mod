@@ -1,3 +1,3 @@
-module github.com/pioneerworks/pgbroker
+module github.com/rueian/pgbroker
 
-go 1.18
+go 1.12

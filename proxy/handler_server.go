@@ -3,7 +3,7 @@ package proxy
 import (
 	"errors"
 
-	"github.com/pioneerworks/pgbroker/message"
+	"github.com/rueian/pgbroker/message"
 )
 
 type HandleAuthenticationOk func(ms *Ctx, msg *message.AuthenticationOk) (*message.AuthenticationOk, error)

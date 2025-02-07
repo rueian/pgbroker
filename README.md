@@ -8,12 +8,12 @@ pgbroker is a golang library for building PostgreSQL proxy, which makes it easy 
 
 One example usage of pgbroker is just simple mapping multiple pg instances into one entry for centralizing management.
 
-Please checkout the https://github.com/pioneerworks/pgbroker-static project.
+Please checkout the https://github.com/rueian/pgbroker-static project.
 
 It is a production ready postgres proxy configured by a yaml file, and it is also has a pre-build docker image.
 
 ```shell
-docker pull pioneerworks/pgbroker-static:latest
+docker pull rueian/pgbroker-static:latest
 ```
 
 ### dynamic proxy
@@ -26,7 +26,7 @@ type PGResolver interface {
 }
 ```
 
-Please check out the https://github.com/pioneerworks/godemand-example project, which uses godemand as an external http resource controller for dynamic pg mapping.
+Please check out the https://github.com/rueian/godemand-example project, which uses godemand as an external http resource controller for dynamic pg mapping.
 
 In this way, the external resource controller is able to do any change to the postgres before connection estiblished, including creating new postgres instance on the fly.
 

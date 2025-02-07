@@ -11,8 +11,8 @@ import (
 	"runtime/pprof"
 	"syscall"
 
-	"github.com/pioneerworks/pgbroker/backend"
-	"github.com/pioneerworks/pgbroker/proxy"
+	"github.com/rueian/pgbroker/backend"
+	"github.com/rueian/pgbroker/proxy"
 )
 
 func main() {
@@ -32,18 +32,18 @@ func main() {
 		panic(err)
 	}
 
-	// clientMessageHandlers := proxy.NewClientMessageHandlers()
-	// serverMessageHandlers := proxy.NewServerMessageHandlers()
+	//clientMessageHandlers := proxy.NewClientMessageHandlers()
+	//serverMessageHandlers := proxy.NewServerMessageHandlers()
 	//
-	// clientMessageHandlers.AddHandleQuery(func(ctx *proxy.Ctx, msg *message.Query) (query *message.Query, e error) {
+	//clientMessageHandlers.AddHandleQuery(func(ctx *proxy.Ctx, msg *message.Query) (query *message.Query, e error) {
 	//	fmt.Println("Query: ", msg.QueryString)
 	//	return msg, nil
-	// })
-	// serverMessageHandlers.AddHandleRowDescription(func(ctx *proxy.Ctx, msg *message.RowDescription) (data *message.RowDescription, e error) {
+	//})
+	//serverMessageHandlers.AddHandleRowDescription(func(ctx *proxy.Ctx, msg *message.RowDescription) (data *message.RowDescription, e error) {
 	//	ctx.RowDescription = msg
 	//	return msg, nil
-	// })
-	// serverMessageHandlers.AddHandleDataRow(func(ctx *proxy.Ctx, msg *message.DataRow) (data *message.DataRow, e error) {
+	//})
+	//serverMessageHandlers.AddHandleDataRow(func(ctx *proxy.Ctx, msg *message.DataRow) (data *message.DataRow, e error) {
 	//	fmt.Printf("DataDes\t")
 	//	for _, f := range ctx.RowDescription.Fields {
 	//		fmt.Printf("%s\t", f.Name)
@@ -55,7 +55,7 @@ func main() {
 	//	}
 	//	fmt.Println("")
 	//	return msg, nil
-	// })
+	//})
 
 	clientStreamCallbackFactories := proxy.NewStreamCallbackFactories()
 	serverStreamCallbackFactories := proxy.NewStreamCallbackFactories()
@@ -85,8 +85,8 @@ func main() {
 	server := proxy.Server{
 		PGResolver:    backend.NewStaticPGResolver("postgres:5432"),
 		ConnInfoStore: backend.NewInMemoryConnInfoStore(),
-		// ClientMessageHandlers: clientMessageHandlers,
-		// ServerMessageHandlers: serverMessageHandlers,
+		//ClientMessageHandlers: clientMessageHandlers,
+		//ServerMessageHandlers: serverMessageHandlers,
 		ClientStreamCallbackFactories: clientStreamCallbackFactories,
 		ServerStreamCallbackFactories: serverStreamCallbackFactories,
 		OnHandleConnError: func(err error, ctx *proxy.Ctx, conn net.Conn) {
