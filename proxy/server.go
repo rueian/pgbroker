@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/binary"
 	"errors"
 	"io"
@@ -29,6 +30,7 @@ type Server struct {
 	ServerStreamCallbackFactories *StreamCallbackFactories
 	OnHandleConnError             func(err error, ctx *Ctx, conn net.Conn)
 	Splice                        bool
+	TLSConfig                     *tls.Config
 
 	wg      sync.WaitGroup
 	ln      net.Listener
@@ -136,8 +138,12 @@ func (s *Server) handleConn(ctx *Ctx, client net.Conn) (err error) {
 			return err
 		}
 		if _, ok := startup.(*message.SSLRequest); ok {
-			// TODO: SSLRequest, currently reject
-			client.Write([]byte{'N'})
+			if s.TLSConfig != nil {
+				client.Write([]byte{'S'})
+				client = tls.Server(client, s.TLSConfig)
+			} else {
+				client.Write([]byte{'N'})
+			}
 			continue
 		}
 		if m, ok := startup.(*message.StartupMessage); ok {
